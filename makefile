@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -Iinclude -Wall -std=c++17
 
-TARGET = a.out
+TARGET = detrace
 
 SRC = main.cpp file_io.cpp
 OBJ = $(SRC:.cpp=.o)
