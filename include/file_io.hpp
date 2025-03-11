@@ -1,11 +1,11 @@
 #ifndef FILE_IO_HPP
 #define FILE_IO_HPP
 
-#include <iostream>
+#include "all.hpp"
 
 using namespace std;
-bool open_file(const char *filename);
+FILE *open_file(const char *filename);
 
-void close_file(const char *filename);
+void close_file(const char *filename, FILE *file);
 
 #endif // FILE_IO_HPP
