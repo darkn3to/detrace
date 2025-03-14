@@ -15,14 +15,65 @@ enum TOKEN_TYPE {
     PREPROCESSOR,
     WHITESPACE,
     NEWLINE,
-    END_OF_FILE
+    END_OF_FILE,
+    UNKNOWN
 };
+
+enum tState {
+    NewToken, AcceptToken,
+
+    Identifier, Keyword,
+
+    Number, String, CharLiteral,
+
+    Add, Sub, Mul, Div, Mod,
+
+    And, Or, Not, BitAnd, BitOr, BitXor, BitNot,
+
+    Assign, Equal, NotEqual, Less, Greater, LessEqual, GreaterEqual,
+
+    ShiftLeft, ShiftRight,
+
+    Increment, Decrement,
+
+    Ternary, Colon, Arrow,
+
+    OpenParen, CloseParen, OpenBrace, CloseBrace, OpenBracket, CloseBracket,
+    Comma, Semicolon, Dot,
+
+    Preprocessor,
+
+    If, Else, Switch, Case, Default, While, Do, For, Break, Continue, Return, Goto,
+
+    Int, Char, Float, Double, Void, Bool, Short, Long, Signed, Unsigned,
+
+    Auto, Const, Volatile, Extern, Static, Typedef,
+
+    Enum, Struct, Union,
+
+    True, False,
+
+    Nullptr
+};
+
+
 
 class Token {
 public:
     string lexeme;
     TOKEN_TYPE type;
     double magnitude;
+
+    void set(string lexeme, TOKEN_TYPE type) {
+        this->lexeme = lexeme;
+        this->type = type;
+    }
+
+    void set(string lexeme, TOKEN_TYPE type, double magnitude = 0) {
+        this->lexeme = lexeme;
+        this->type = type;
+        this->magnitude = magnitude;
+    }
     
     void describe() {
         if (type == NUMBER) {
