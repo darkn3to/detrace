@@ -2,6 +2,7 @@
 #define TOKEN_HPP
 
 #include "all.hpp"
+#include <stdbool.h>
 
 enum TOKEN_TYPE {
     IDENTIFIER,
@@ -15,6 +16,7 @@ enum TOKEN_TYPE {
     PREPROCESSOR,
     WHITESPACE,
     NEWLINE,
+    SYMBOL,
     END_OF_FILE,
     UNKNOWN
 };
@@ -22,7 +24,7 @@ enum TOKEN_TYPE {
 enum tState {
     NewToken, AcceptToken,
 
-    Identifier, Keyword,
+    Identifier, Keyword, Symbol,
 
     Number, String, CharLiteral,
 
@@ -41,7 +43,7 @@ enum tState {
     OpenParen, CloseParen, OpenBrace, CloseBrace, OpenBracket, CloseBracket,
     Comma, Semicolon, Dot,
 
-    Preprocessor,
+    Preprocessor, Comment
 
     If, Else, Switch, Case, Default, While, Do, For, Break, Continue, Return, Goto,
 
@@ -123,5 +125,13 @@ public:
         }
     }
 };
+
+bool is_Symbol_Start(char c) {
+    return isalpha(c) || c=='_';
+}
+
+bool is_Symbol(char c) {
+    return isalnum(c) || c=='_';
+}
 
 #endif // TOKEN_HPP
