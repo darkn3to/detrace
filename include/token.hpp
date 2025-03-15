@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 enum TOKEN_TYPE {
+    SYMBOL,
     IDENTIFIER,
     NUMBER,
     STRING,
@@ -16,7 +17,6 @@ enum TOKEN_TYPE {
     PREPROCESSOR,
     WHITESPACE,
     NEWLINE,
-    SYMBOL,
     END_OF_FILE,
     UNKNOWN
 };
@@ -43,7 +43,7 @@ enum tState {
     OpenParen, CloseParen, OpenBrace, CloseBrace, OpenBracket, CloseBracket,
     Comma, Semicolon, Dot,
 
-    Preprocessor, Comment
+    Preprocessor, Comment, 
 
     If, Else, Switch, Case, Default, While, Do, For, Break, Continue, Return, Goto,
 
@@ -71,18 +71,21 @@ public:
         this->type = type;
     }
 
-    void set(string lexeme, TOKEN_TYPE type, double magnitude = 0) {
+    void set(string lexeme, TOKEN_TYPE type, double magnitude) {
         this->lexeme = lexeme;
         this->type = type;
         this->magnitude = magnitude;
     }
     
-    void describe() {
+    void describe() const {
         if (type == NUMBER) {
             cout << "Lexeme: " << to_string(magnitude);
         }
         cout << "Lexeme: " << lexeme;
         switch (type) {
+            case SYMBOL:
+                cout << ", Type: SYMBOL" << endl;
+                break;
             case IDENTIFIER:
                 cout << ", Type: IDENTIFIER" << endl;
                 break;
@@ -131,6 +134,9 @@ bool is_Symbol_Start(char c) {
 }
 
 bool is_Symbol(char c) {
+    if (isalnum(c) || c=='_') {
+        //cout << c << " is symbol: " << (isalnum(c) || c== '_') << endl; 
+    }
     return isalnum(c) || c=='_';
 }
 

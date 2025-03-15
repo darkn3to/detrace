@@ -3,14 +3,21 @@
 
 #include "all.hpp"
 #include "token.hpp"
+#include <vector>
 
 class FSM {
 public:
-    vector<Token> fsm(FILE *file) {
+    std::vector<Token> fsm(FILE *file) {
+        std::vector<Token> tokens;
+        
+        short initialPos = static_cast<short>(ftell(file));
+
         if (fgetc(file) == EOF) {
             throw Error("[FSM] The provided file is EMPTY! ");
-            return {};
+            return tokens;
         }
+
+        fseek(file, initialPos, SEEK_SET);
     
         tState currState = tState::NewToken;
         tState nextState = tState::NewToken;
@@ -19,7 +26,7 @@ public:
         currToken.set("", TOKEN_TYPE::UNKNOWN);
 
         char c;
-        while ((c=fgetc(file)) != EOF) {
+        while ((c = fgetc(file)) != EOF) {
             switch (currState) {
                 case tState::NewToken: {
                     TokenUptillNow = "";
@@ -28,19 +35,16 @@ public:
                     // for header files
                     if (c == '#') {
                         TokenUptillNow = "#";
+                        //cout << "Hash detected" << endl;
                         nextState = tState::AcceptToken;
                         currToken.set(TokenUptillNow, TOKEN_TYPE::PREPROCESSOR);
                     }
 
                     else if (is_Symbol_Start(c)) {
+                        //cout << "Symbol start detected" << endl;
                         TokenUptillNow = c;
                         nextState = tState::Symbol;
                         currToken.set(string(1, c), TOKEN_TYPE::SYMBOL);
-                        /*while (is_Symbol(c) && c != EOF) {
-                            TokenUptillNow += c;
-                            c = fgetc(file);
-
-                        }*/
                     }
                     
                     // handle comments
@@ -48,44 +52,47 @@ public:
                         nextState = tState::Comment;
                     }
 
-                    // else if (c == '')
-
-                    // ignore spaces, newlines, tabs
-                    else if (c == ' ' || c == '\t' || c == '\n') {
+                    // ignore spaces, newlines, tabs, carriage returns
+                    else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
                         nextState = tState::NewToken;
                     }
 
                 } break;
 
-                /*case tState::Preprocessor: {
-                    nextState = tState::AcceptToken;
-                    TokenUptillNow = "";
-                } break;*/
-
                 case tState::Symbol: {
+                    //cout << "Symbol detected:  " << c << endl;
                     if (is_Symbol(c)) {
                         TokenUptillNow += c;
+                        //cout << TokenUptillNow << endl;
                         nextState = tState::Symbol;
                     }
                     else {
-                        fseek(file, -1, SEEK_CURR); 
+                        fseek(file, -1, SEEK_CUR); 
                         nextState = tState::AcceptToken;
                     }
                 } break;
 
                 case tState::AcceptToken: {
                     nextState = tState::NewToken;
-                    fseek(file, -1, SEEK_CURR); // move back the pointer to run analysis 
+                    fseek(file, -1, SEEK_CUR); // move back the pointer to run analysis 
                                                 // for the current character as it failed 
                                                 // the original condition.
-                    return currToken;
+                    currToken.set(TokenUptillNow, currToken.type);
+                    tokens.push_back(currToken);
                 } break;
 
+                default: {
+                    throw Error("[FSM] Unhandled state encountered!");
+                } break;
             }
             currState = nextState;
         }
 
-        return currToken;
+        if (currState == tState::AcceptToken) {
+            tokens.push_back(currToken);
+        }
+
+        return tokens;
     }
 
 };
