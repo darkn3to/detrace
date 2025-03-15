@@ -23,7 +23,6 @@ public:
         tState nextState = tState::NewToken;
         string TokenUptillNow = "";
         Token currToken;
-        currToken.set("", TOKEN_TYPE::UNKNOWN);
 
         char c;
         while ((c = fgetc(file)) != EOF) {
@@ -43,6 +42,7 @@ public:
                     else if (is_Symbol_Start(c)) {
                         //cout << "Symbol start detected" << endl;
                         TokenUptillNow = c;
+
                         nextState = tState::Symbol;
                         currToken.set(string(1, c), TOKEN_TYPE::SYMBOL);
                     }
@@ -87,8 +87,9 @@ public:
             }
             currState = nextState;
         }
-
-        if (currState == tState::AcceptToken) {
+        
+        if (currState == tState::Symbol || currState == tState::AcceptToken) {
+            currToken.set(TokenUptillNow, currToken.type);
             tokens.push_back(currToken);
         }
 

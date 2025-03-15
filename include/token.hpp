@@ -18,7 +18,7 @@ enum TOKEN_TYPE {
     WHITESPACE,
     NEWLINE,
     END_OF_FILE,
-    UNKNOWN
+    UNKNOWN,
 };
 
 enum tState {
@@ -134,9 +134,9 @@ bool is_Symbol_Start(char c) {
 }
 
 bool is_Symbol(char c) {
-    if (isalnum(c) || c=='_') {
-        //cout << c << " is symbol: " << (isalnum(c) || c== '_') << endl; 
-    }
+    /*if (isalnum(c) || c=='_') {
+        cout << c << " is symbol: " << (isalnum(c) || c== '_') << endl; 
+    }*/
     return isalnum(c) || c=='_';
 }
 
