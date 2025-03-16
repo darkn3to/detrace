@@ -3,6 +3,7 @@
 
 #include "all.hpp"
 #include <stdbool.h>
+#include <iostream>
 
 enum TOKEN_TYPE {
     SYMBOL,
@@ -55,10 +56,8 @@ enum tState {
 
     True, False,
 
-    Nullptr
+    Nullptr, Unknown
 };
-
-
 
 class Token {
 public:
@@ -78,52 +77,68 @@ public:
     }
     
     void describe() const {
+        //std::cout << "Describing token: " << lexeme << std::endl;
         if (type == NUMBER) {
-            cout << "Lexeme: " << to_string(magnitude);
+            cout << "Lexeme: " << to_string(magnitude) << endl;
+        } else {
+            cout << "Lexeme: " << lexeme << endl;
         }
-        cout << "Lexeme: " << lexeme;
         switch (type) {
             case SYMBOL:
-                cout << ", Type: SYMBOL" << endl;
+                cout << ", Type: SYMBOL" << std::endl;
+                cout << endl;
                 break;
             case IDENTIFIER:
-                cout << ", Type: IDENTIFIER" << endl;
+                cout << "Type: IDENTIFIER" << std::endl;
+                cout << endl;
                 break;
             case NUMBER:
-                cout << ", Type: NUMBER" << endl;
+                cout << "Type: NUMBER" << std::endl;
+                cout << endl;
                 break;  
             case STRING:
-                cout << ", Type: STRING" << endl;
+                cout << "Type: STRING" << std::endl;
+                cout << endl;
                 break;
             case KEYWORD:
-                cout << ", Type: KEYWORD" << endl;
+                cout << "Type: KEYWORD" << std::endl;
+                cout << endl;
                 break;
             case OPERATOR:
-                cout << ", Type: OPERATOR" << endl;
+                cout << "Type: OPERATOR" << std::endl;
+                cout << endl;
                 break;
             case PUNCTUATOR:
-                cout << ", Type: PUNCTUATOR" << endl;
+                cout << "Type: PUNCTUATOR" << std::endl;
+                cout << endl;
                 break;
             case PARENTHESIS:
-                cout << ", Type: PARENTHESIS" << endl;
+                cout << "Type: PARENTHESIS" << std::endl;
+                cout << endl;
                 break;
             case COMMENT:
-                cout << ", Type: COMMENT" << endl;
+                cout << "Type: COMMENT" << std::endl;
+                cout << endl;
                 break;
             case PREPROCESSOR:
-                cout << ", Type: PREPROCESSOR" << endl;
+                cout << "Type: PREPROCESSOR" << std::endl;
+                cout << endl;
                 break;
             case WHITESPACE:
-                cout << ", Type: WHITESPACE" << endl;
+                cout << "Type: WHITESPACE" << std::endl;
+                cout << endl;
                 break;
             case NEWLINE:
-                cout << ", Type: NEWLINE" << endl;
+                cout << "Type: NEWLINE" << std::endl;
+                cout << endl;
                 break;
             case END_OF_FILE:
-                cout << ", Type: END_OF_FILE" << endl;
+                cout << "Type: END_OF_FILE" << std::endl;
+                cout << endl;
                 break;
             default:
-                cout << ", Type: UNKNOWN" << endl;
+                cout << "Type: UNKNOWN" << std::endl;
+                cout << endl;
                 break;  
         }
     }
@@ -134,9 +149,6 @@ bool is_Symbol_Start(char c) {
 }
 
 bool is_Symbol(char c) {
-    /*if (isalnum(c) || c=='_') {
-        cout << c << " is symbol: " << (isalnum(c) || c== '_') << endl; 
-    }*/
     return isalnum(c) || c=='_';
 }
 

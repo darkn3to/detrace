@@ -29,14 +29,18 @@ public:
             switch (currState) {
                 case tState::NewToken: {
                     TokenUptillNow = "";
-                    currToken.set("", TOKEN_TYPE::UNKNOWN);
+                    currToken.set(TokenUptillNow, TOKEN_TYPE::UNKNOWN);
 
                     // for header files
                     if (c == '#') {
                         TokenUptillNow = "#";
+                        while ((c = fgetc(file)) != '\n' && c != EOF) {
+                            TokenUptillNow += string(1, c);
+                            //cout << "tok: " << TokenUptillNow << endl;
+                        }
                         //cout << "Hash detected" << endl;
-                        nextState = tState::AcceptToken;
                         currToken.set(TokenUptillNow, TOKEN_TYPE::PREPROCESSOR);
+                        nextState = tState::AcceptToken;
                     }
 
                     else if (is_Symbol_Start(c)) {
@@ -47,14 +51,19 @@ public:
                         currToken.set(string(1, c), TOKEN_TYPE::SYMBOL);
                     }
                     
-                    // handle comments
+                    /* handle comments
                     else if (c == '/') {
                         nextState = tState::Comment;
-                    }
+                    }*/
 
                     // ignore spaces, newlines, tabs, carriage returns
                     else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
                         nextState = tState::NewToken;
+                    }
+
+                    else {
+                        nextState = tState::Unknown;
+                        TokenUptillNow = string(1, c);
                     }
 
                 } break;
@@ -72,13 +81,21 @@ public:
                     }
                 } break;
 
+                case tState::Unknown: {
+                    fseek(file, -1, SEEK_CUR);
+                    nextState = tState::AcceptToken;
+                } break;
+
                 case tState::AcceptToken: {
+                    //cout << "Accepting token: " << TokenUptillNow << endl;
                     nextState = tState::NewToken;
-                    fseek(file, -1, SEEK_CUR); // move back the pointer to run analysis 
+                    fseek(file, -1, SEEK_CUR);  // move back the pointer to run analysis 
                                                 // for the current character as it failed 
-                                                // the original condition.
+                                                // the original condition.      
+
                     currToken.set(TokenUptillNow, currToken.type);
                     tokens.push_back(currToken);
+                    //cout << "Token accepted: " << currToken.lexeme << endl;
                 } break;
 
                 default: {
@@ -88,10 +105,9 @@ public:
             currState = nextState;
         }
         
-        if (currState == tState::Symbol || currState == tState::AcceptToken) {
-            currToken.set(TokenUptillNow, currToken.type);
-            tokens.push_back(currToken);
-        }
+        //if (currState == tState::Symbol || currState == tState::AcceptToken) {
+        currToken.set(TokenUptillNow, currToken.type);
+        tokens.push_back(currToken);
 
         return tokens;
     }
