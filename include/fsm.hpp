@@ -55,10 +55,39 @@ public:
                     else if (c == '/') {
                         nextState = tState::Comment;
                     }*/
-
+                    
                     // ignore spaces, newlines, tabs, carriage returns
                     else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
                         nextState = tState::NewToken;
+                    }
+
+                    else if (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}') {
+                        nextState = tState::AcceptToken;
+                        TokenUptillNow = string(1, c);
+                        if (c == '(') {
+                            currToken.set(TOKEN_TYPE::LPAREN);
+                        }
+                        else if (c == ')') {
+                            currToken.set(TOKEN_TYPE::RPAREN);
+                        }
+                        else if (c == '{') {
+                            currToken.set(TOKEN_TYPE::LBRACE);
+                        }
+                        else if (c == '}') {
+                            currToken.set(TOKEN_TYPE::RBRACE);
+                        }
+                        else if (c == '[') {
+                            currToken.set(TOKEN_TYPE::LSQBRACKET);
+                        }
+                        else if (c == ']') {
+                            currToken.set(TOKEN_TYPE::RSQBRACKET);
+                        }
+                    }
+                    
+                    else if (c == ':' || c == ';') {
+                        TokenUptillNow = string(1, c);
+                        currToken.set(TokenUptillNow, (c == ':') ? TOKEN_TYPE::COLON : TOKEN_TYPE::SEMICOLON);
+                        nextState = tState::AcceptToken;
                     }
 
                     else {

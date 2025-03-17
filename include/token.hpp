@@ -13,7 +13,16 @@ enum TOKEN_TYPE {
     KEYWORD,
     OPERATOR,
     PUNCTUATOR,
-    PARENTHESIS,
+    LPAREN,
+    RPAREN,
+    LSQBRACKET,
+    RSQBRACKET,
+    LBRACE,
+    RBRACE,
+    LABRACKET,
+    RABRACKET,
+    COLON,
+    SEMICOLON,
     COMMENT,
     PREPROCESSOR,
     WHITESPACE,
@@ -41,8 +50,7 @@ enum tState {
 
     Ternary, Colon, Arrow,
 
-    OpenParen, CloseParen, OpenBrace, CloseBrace, OpenBracket, CloseBracket,
-    Comma, Semicolon, Dot,
+    Comma, Dot,
 
     Preprocessor, Comment, 
 
@@ -65,6 +73,10 @@ public:
     TOKEN_TYPE type;
     double magnitude;
 
+    void set(TOKEN_TYPE type) {
+        this->type = type;
+    }
+
     void set(string lexeme, TOKEN_TYPE type) {
         this->lexeme = lexeme;
         this->type = type;
@@ -80,12 +92,13 @@ public:
         //std::cout << "Describing token: " << lexeme << std::endl;
         if (type == NUMBER) {
             cout << "Lexeme: " << to_string(magnitude) << endl;
-        } else {
+        } 
+        else {
             cout << "Lexeme: " << lexeme << endl;
         }
         switch (type) {
             case SYMBOL:
-                cout << ", Type: SYMBOL" << std::endl;
+                cout << "Type: SYMBOL" << std::endl;
                 cout << endl;
                 break;
             case IDENTIFIER:
@@ -112,8 +125,36 @@ public:
                 cout << "Type: PUNCTUATOR" << std::endl;
                 cout << endl;
                 break;
-            case PARENTHESIS:
-                cout << "Type: PARENTHESIS" << std::endl;
+            case LPAREN:
+                cout << "Type: LPAREN" << std::endl;
+                cout << endl;
+                break;
+            case RPAREN:
+                cout << "Type: RPAREN" << std::endl;
+                cout << endl;
+                break;
+            case LSQBRACKET:
+                cout << "Type: LSQBRACKET" << std::endl;
+                cout << endl;
+                break;
+            case RSQBRACKET:
+                cout << "Type: RSQBRACKET" << std::endl;
+                cout << endl;
+                break;
+            case LBRACE:
+                cout << "Type: LBRACE" << std::endl;
+                cout << endl;
+                break;
+            case RBRACE:
+                cout << "Type: RBRACE" << std::endl;
+                cout << endl;
+                break;
+            case COLON:
+                cout << "Type: COLON" << std::endl;
+                cout << endl;
+                break;
+            case SEMICOLON:
+                cout << "Type: SEMICOLON" << std::endl;
                 cout << endl;
                 break;
             case COMMENT:
