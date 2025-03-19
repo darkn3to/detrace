@@ -22,6 +22,7 @@ enum TOKEN_TYPE {
     LABRACKET,
     RABRACKET,
     COLON,
+    STRING_LITERAL,
     SEMICOLON,
     COMMENT,
     PREPROCESSOR,
@@ -29,12 +30,45 @@ enum TOKEN_TYPE {
     NEWLINE,
     END_OF_FILE,
     UNKNOWN,
+
+    // Keywords
+    AUTO,
+    BREAK,
+    CASE,
+    CHAR,
+    CONST,
+    CONTINUE,
+    DEFAULT,
+    DO,
+    DOUBLE,
+    ELSE,
+    ENUM,
+    EXTERN,
+    FLOAT,
+    FOR,
+    GOTO,
+    IF,
+    INT,
+    LONG,
+    RETURN,
+    SHORT,
+    SIGNED,
+    SIZEOF,
+    STATIC,
+    STRUCT,
+    SWITCH,
+    TYPEDEF,
+    UNION,
+    UNSIGNED,
+    VOID,
+    VOLATILE,
+    WHILE
 };
 
 enum tState {
     NewToken, AcceptToken,
 
-    Identifier, Keyword, Symbol,
+    Identifier, Symbol,
 
     Number, String, CharLiteral,
 
@@ -54,17 +88,43 @@ enum tState {
 
     Preprocessor, Comment, 
 
-    If, Else, Switch, Case, Default, While, Do, For, Break, Continue, Return, Goto,
-
-    Int, Char, Float, Double, Void, Bool, Short, Long, Signed, Unsigned,
-
-    Auto, Const, Volatile, Extern, Static, Typedef,
-
-    Enum, Struct, Union,
-
     True, False,
 
     Nullptr, Unknown
+};
+
+const unordered_map<std::string, TOKEN_TYPE> keywordMap = {
+    {"auto", TOKEN_TYPE::AUTO},
+    {"break", TOKEN_TYPE::BREAK},
+    {"case", TOKEN_TYPE::CASE},
+    {"char", TOKEN_TYPE::CHAR},
+    {"const", TOKEN_TYPE::CONST},
+    {"continue", TOKEN_TYPE::CONTINUE},
+    {"default", TOKEN_TYPE::DEFAULT},
+    {"do", TOKEN_TYPE::DO},
+    {"double", TOKEN_TYPE::DOUBLE},
+    {"else", TOKEN_TYPE::ELSE},
+    {"enum", TOKEN_TYPE::ENUM},
+    {"extern", TOKEN_TYPE::EXTERN},
+    {"float", TOKEN_TYPE::FLOAT},
+    {"for", TOKEN_TYPE::FOR},
+    {"goto", TOKEN_TYPE::GOTO},
+    {"if", TOKEN_TYPE::IF},
+    {"int", TOKEN_TYPE::INT},
+    {"long", TOKEN_TYPE::LONG},
+    {"return", TOKEN_TYPE::RETURN},
+    {"short", TOKEN_TYPE::SHORT},
+    {"signed", TOKEN_TYPE::SIGNED},
+    {"sizeof", TOKEN_TYPE::SIZEOF},
+    {"static", TOKEN_TYPE::STATIC},
+    {"struct", TOKEN_TYPE::STRUCT},
+    {"switch", TOKEN_TYPE::SWITCH},
+    {"typedef", TOKEN_TYPE::TYPEDEF},
+    {"union", TOKEN_TYPE::UNION},
+    {"unsigned", TOKEN_TYPE::UNSIGNED},
+    {"void", TOKEN_TYPE::VOID},
+    {"volatile", TOKEN_TYPE::VOLATILE},
+    {"while", TOKEN_TYPE::WHILE}
 };
 
 class Token {
@@ -98,98 +158,102 @@ public:
         }
         switch (type) {
             case SYMBOL:
-                cout << "Type: SYMBOL" << std::endl;
+                cout << "Type: SYMBOL" << endl;
                 cout << endl;
                 break;
             case IDENTIFIER:
-                cout << "Type: IDENTIFIER" << std::endl;
+                cout << "Type: IDENTIFIER" << endl;
                 cout << endl;
                 break;
             case NUMBER:
-                cout << "Type: NUMBER" << std::endl;
+                cout << "Type: NUMBER" << endl;
                 cout << endl;
                 break;  
             case STRING:
-                cout << "Type: STRING" << std::endl;
+                cout << "Type: STRING" << endl;
+                cout << endl;
+                break;
+            case STRING_LITERAL:
+                cout << "Type: STRING_LITERAL" << endl;
                 cout << endl;
                 break;
             case KEYWORD:
-                cout << "Type: KEYWORD" << std::endl;
+                cout << "Type: KEYWORD" << endl;
                 cout << endl;
                 break;
             case OPERATOR:
-                cout << "Type: OPERATOR" << std::endl;
+                cout << "Type: OPERATOR" << endl;
                 cout << endl;
                 break;
             case PUNCTUATOR:
-                cout << "Type: PUNCTUATOR" << std::endl;
+                cout << "Type: PUNCTUATOR" << endl;
                 cout << endl;
                 break;
             case LPAREN:
-                cout << "Type: LPAREN" << std::endl;
+                cout << "Type: LPAREN" << endl;
                 cout << endl;
                 break;
             case RPAREN:
-                cout << "Type: RPAREN" << std::endl;
+                cout << "Type: RPAREN" << endl;
                 cout << endl;
                 break;
             case LSQBRACKET:
-                cout << "Type: LSQBRACKET" << std::endl;
+                cout << "Type: LSQBRACKET" << endl;
                 cout << endl;
                 break;
             case RSQBRACKET:
-                cout << "Type: RSQBRACKET" << std::endl;
+                cout << "Type: RSQBRACKET" << endl;
                 cout << endl;
                 break;
             case LBRACE:
-                cout << "Type: LBRACE" << std::endl;
+                cout << "Type: LBRACE" << endl;
                 cout << endl;
                 break;
             case RBRACE:
-                cout << "Type: RBRACE" << std::endl;
+                cout << "Type: RBRACE" << endl;
                 cout << endl;
                 break;
             case COLON:
-                cout << "Type: COLON" << std::endl;
+                cout << "Type: COLON" << endl;
                 cout << endl;
                 break;
             case SEMICOLON:
-                cout << "Type: SEMICOLON" << std::endl;
+                cout << "Type: SEMICOLON" << endl;
                 cout << endl;
                 break;
             case COMMENT:
-                cout << "Type: COMMENT" << std::endl;
+                cout << "Type: COMMENT" << endl;
                 cout << endl;
                 break;
             case PREPROCESSOR:
-                cout << "Type: PREPROCESSOR" << std::endl;
+                cout << "Type: PREPROCESSOR" << endl;
                 cout << endl;
                 break;
             case WHITESPACE:
-                cout << "Type: WHITESPACE" << std::endl;
+                cout << "Type: WHITESPACE" << endl;
                 cout << endl;
                 break;
             case NEWLINE:
-                cout << "Type: NEWLINE" << std::endl;
+                cout << "Type: NEWLINE" << endl;
                 cout << endl;
                 break;
             case END_OF_FILE:
-                cout << "Type: END_OF_FILE" << std::endl;
+                cout << "Type: END_OF_FILE" << endl;
                 cout << endl;
                 break;
             default:
-                cout << "Type: UNKNOWN" << std::endl;
+                cout << "Type: UNKNOWN" << endl;
                 cout << endl;
                 break;  
         }
     }
 };
 
-bool is_Symbol_Start(char c) {
+bool is_Identifier_Start(char c) {
     return isalpha(c) || c=='_';
 }
 
-bool is_Symbol(char c) {
+bool is_Identifier(char c) {
     return isalnum(c) || c=='_';
 }
 

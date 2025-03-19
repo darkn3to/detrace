@@ -43,12 +43,20 @@ public:
                         nextState = tState::AcceptToken;
                     }
 
-                    else if (is_Symbol_Start(c)) {
+                    else if (c == '"') {
+                        while ((c = fgetc(file)) != '"' && c != EOF) {
+                            TokenUptillNow += string(1, c);
+                        }
+                        currToken.set(TOKEN_TYPE::STRING_LITERAL);
+                        nextState = tState::AcceptToken;
+                    }
+
+                    else if (is_Identifier_Start(c)) {
                         //cout << "Symbol start detected" << endl;
                         TokenUptillNow = c;
 
-                        nextState = tState::Symbol;
-                        currToken.set(string(1, c), TOKEN_TYPE::SYMBOL);
+                        nextState = tState::Identifier;
+                        currToken.set(string(1, c), TOKEN_TYPE::IDENTIFIER);
                     }
                     
                     /* handle comments
@@ -97,14 +105,17 @@ public:
 
                 } break;
 
-                case tState::Symbol: {
+                case tState::Identifier: {
                     //cout << "Symbol detected:  " << c << endl;
-                    if (is_Symbol(c)) {
+                    if (is_Identifier(c)) {
                         TokenUptillNow += c;
                         //cout << TokenUptillNow << endl;
-                        nextState = tState::Symbol;
+                        nextState = tState::Identifier;
                     }
                     else {
+                        if (keywordMap.find(TokenUptillNow) != keywordMap.end()) {
+                            currToken.set(TOKEN_TYPE::KEYWORD);
+                        }
                         fseek(file, -1, SEEK_CUR); 
                         nextState = tState::AcceptToken;
                     }
