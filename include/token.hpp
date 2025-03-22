@@ -4,6 +4,9 @@
 #include "all.hpp"
 #include <stdbool.h>
 #include <iostream>
+#include <cstdio>
+#include <unordered_map>
+#include <string>
 
 enum TOKEN_TYPE {
     SYMBOL,
@@ -67,33 +70,21 @@ enum TOKEN_TYPE {
 
 enum tState {
     NewToken, AcceptToken,
-
     Identifier, Symbol,
-
     Number, String, CharLiteral,
-
     Add, Sub, Mul, Div, Mod,
-
     And, Or, Not, BitAnd, BitOr, BitXor, BitNot,
-
     Assign, Equal, NotEqual, Less, Greater, LessEqual, GreaterEqual,
-
     ShiftLeft, ShiftRight,
-
     Increment, Decrement,
-
     Ternary, Colon, Arrow,
-
     Comma, Dot,
-
     Preprocessor, Comment, 
-
     True, False,
-
     Nullptr, Unknown
 };
 
-const unordered_map<std::string, TOKEN_TYPE> keywordMap = {
+const unordered_map<string, TOKEN_TYPE> keywordMap = {
     {"auto", TOKEN_TYPE::AUTO},
     {"break", TOKEN_TYPE::BREAK},
     {"case", TOKEN_TYPE::CASE},
@@ -127,6 +118,66 @@ const unordered_map<std::string, TOKEN_TYPE> keywordMap = {
     {"while", TOKEN_TYPE::WHILE}
 };
 
+string tokenTypeToString(TOKEN_TYPE type) {
+    switch(type) {
+        case SYMBOL:         return "SYMBOL";
+        case IDENTIFIER:     return "IDENTIFIER";
+        case NUMBER:         return "NUMBER";
+        case STRING:         return "STRING";
+        case KEYWORD:        return "KEYWORD";
+        case OPERATOR:       return "OPERATOR";
+        case PUNCTUATOR:     return "PUNCTUATOR";
+        case LPAREN:         return "LPAREN";
+        case RPAREN:         return "RPAREN";
+        case LSQBRACKET:     return "LSQBRACKET";
+        case RSQBRACKET:     return "RSQBRACKET";
+        case LBRACE:         return "LBRACE";
+        case RBRACE:         return "RBRACE";
+        case LABRACKET:      return "LABRACKET";
+        case RABRACKET:      return "RABRACKET";
+        case COLON:          return "COLON";
+        case STRING_LITERAL: return "STRING_LITERAL";
+        case SEMICOLON:      return "SEMICOLON";
+        case COMMENT:        return "COMMENT";
+        case PREPROCESSOR:   return "PREPROCESSOR";
+        case WHITESPACE:     return "WHITESPACE";
+        case NEWLINE:        return "NEWLINE";
+        case END_OF_FILE:    return "END_OF_FILE";
+        case AUTO:           return "AUTO";
+        case BREAK:          return "BREAK";
+        case CASE:           return "CASE";
+        case CHAR:           return "CHAR";
+        case CONST:          return "CONST";
+        case CONTINUE:       return "CONTINUE";
+        case DEFAULT:        return "DEFAULT";
+        case DO:             return "DO";
+        case DOUBLE:         return "DOUBLE";
+        case ELSE:           return "ELSE";
+        case ENUM:           return "ENUM";
+        case EXTERN:         return "EXTERN";
+        case FLOAT:          return "FLOAT";
+        case FOR:            return "FOR";
+        case GOTO:           return "GOTO";
+        case IF:             return "IF";
+        case INT:            return "INT";
+        case LONG:           return "LONG";
+        case RETURN:         return "RETURN";
+        case SHORT:          return "SHORT";
+        case SIGNED:         return "SIGNED";
+        case SIZEOF:         return "SIZEOF";
+        case STATIC:         return "STATIC";
+        case STRUCT:         return "STRUCT";
+        case SWITCH:         return "SWITCH";
+        case TYPEDEF:        return "TYPEDEF";
+        case UNION:          return "UNION";
+        case UNSIGNED:       return "UNSIGNED";
+        case VOID:           return "VOID";
+        case VOLATILE:       return "VOLATILE";
+        case WHILE:          return "WHILE";
+        default:             return "UNKNOWN";
+    }
+}
+
 class Token {
 public:
     string lexeme;
@@ -148,104 +199,9 @@ public:
         this->magnitude = magnitude;
     }
     
-    void describe() const {
-        //std::cout << "Describing token: " << lexeme << std::endl;
-        if (type == NUMBER) {
-            cout << "Lexeme: " << to_string(magnitude) << endl;
-        } 
-        else {
-            cout << "Lexeme: " << lexeme << endl;
-        }
-        switch (type) {
-            case SYMBOL:
-                cout << "Type: SYMBOL" << endl;
-                cout << endl;
-                break;
-            case IDENTIFIER:
-                cout << "Type: IDENTIFIER" << endl;
-                cout << endl;
-                break;
-            case NUMBER:
-                cout << "Type: NUMBER" << endl;
-                cout << endl;
-                break;  
-            case STRING:
-                cout << "Type: STRING" << endl;
-                cout << endl;
-                break;
-            case STRING_LITERAL:
-                cout << "Type: STRING_LITERAL" << endl;
-                cout << endl;
-                break;
-            case KEYWORD:
-                cout << "Type: KEYWORD" << endl;
-                cout << endl;
-                break;
-            case OPERATOR:
-                cout << "Type: OPERATOR" << endl;
-                cout << endl;
-                break;
-            case PUNCTUATOR:
-                cout << "Type: PUNCTUATOR" << endl;
-                cout << endl;
-                break;
-            case LPAREN:
-                cout << "Type: LPAREN" << endl;
-                cout << endl;
-                break;
-            case RPAREN:
-                cout << "Type: RPAREN" << endl;
-                cout << endl;
-                break;
-            case LSQBRACKET:
-                cout << "Type: LSQBRACKET" << endl;
-                cout << endl;
-                break;
-            case RSQBRACKET:
-                cout << "Type: RSQBRACKET" << endl;
-                cout << endl;
-                break;
-            case LBRACE:
-                cout << "Type: LBRACE" << endl;
-                cout << endl;
-                break;
-            case RBRACE:
-                cout << "Type: RBRACE" << endl;
-                cout << endl;
-                break;
-            case COLON:
-                cout << "Type: COLON" << endl;
-                cout << endl;
-                break;
-            case SEMICOLON:
-                cout << "Type: SEMICOLON" << endl;
-                cout << endl;
-                break;
-            case COMMENT:
-                cout << "Type: COMMENT" << endl;
-                cout << endl;
-                break;
-            case PREPROCESSOR:
-                cout << "Type: PREPROCESSOR" << endl;
-                cout << endl;
-                break;
-            case WHITESPACE:
-                cout << "Type: WHITESPACE" << endl;
-                cout << endl;
-                break;
-            case NEWLINE:
-                cout << "Type: NEWLINE" << endl;
-                cout << endl;
-                break;
-            case END_OF_FILE:
-                cout << "Type: END_OF_FILE" << endl;
-                cout << endl;
-                break;
-            default:
-                cout << "Type: UNKNOWN" << endl;
-                cout << endl;
-                break;  
-        }
+    void describe(FILE *out) const {
+        string typeStr = tokenTypeToString(type);
+        fprintf(out, "%s ", typeStr.c_str());
     }
 };
 
