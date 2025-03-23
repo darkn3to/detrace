@@ -1,0 +1,87 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+
+using namespace std;
+
+unordered_map<string, vector<pair<string, string>>> TOKENS;
+
+vector<pair<string, string>> keywords = {
+    {"alignas", "ALIGNAS"}, {"alignof", "ALIGNOF"}, {"and", "LOGICAL_AND"}, {"and_eq", "BITWISE_AND_ASSIGN"},
+    {"asm", "ASM"}, {"auto", "AUTO"}, {"bool", "BOOL"}, {"break", "BREAK"}, {"case", "CASE"},
+    {"catch", "CATCH"}, {"char", "CHAR"}, {"class", "CLASS"}, {"const", "CONST"}, {"continue", "CONTINUE"},
+    {"default", "DEFAULT"}, {"delete", "DELETE"}, {"do", "DO"}, {"double", "DOUBLE"}, {"else", "ELSE"},
+    {"enum", "ENUM"}, {"explicit", "EXPLICIT"}, {"extern", "EXTERN"}, {"false", "FALSE"}, {"float", "FLOAT"},
+    {"for", "FOR"}, {"goto", "GOTO"}, {"if", "IF"}, {"inline", "INLINE"}, {"int", "INT"},
+    {"long", "LONG"}, {"mutable", "MUTABLE"}, {"namespace", "NAMESPACE"}, {"new", "NEW"}, {"noexcept", "NOEXCEPT"},
+    {"nullptr", "NULLPTR"}, {"operator", "OPERATOR"}, {"or", "LOGICAL_OR"}, {"private", "PRIVATE"}, {"protected", "PROTECTED"},
+    {"public", "PUBLIC"}, {"return", "RETURN"}, {"short", "SHORT"}, {"signed", "SIGNED"}, {"sizeof", "SIZEOF"},
+    {"static", "STATIC"}, {"struct", "STRUCT"}, {"switch", "SWITCH"}, {"template", "TEMPLATE"}, {"this", "THIS"},
+    {"throw", "THROW"}, {"true", "TRUE"}, {"try", "TRY"}, {"typedef", "TYPEDEF"}, {"typename", "TYPENAME"},
+    {"union", "UNION"}, {"unsigned", "UNSIGNED"}, {"using", "USING"}, {"virtual", "VIRTUAL"}, {"void", "VOID"},
+    {"volatile", "VOLATILE"}, {"while", "WHILE"}, {"xor", "BITWISE_XOR"}
+};
+
+vector<pair<string, string>> operators = {
+    {"+", "ADD"}, {"-", "SUBTRACT"}, {"*", "MULTIPLY"}, {"/", "DIVIDE"}, {"%", "MODULUS"},
+    {"++", "INCREMENT"}, {"--", "DECREMENT"}, {"==", "EQUAL"}, {"!=", "NOT_EQUAL"},
+    {">", "GREATER_THAN"}, {"<", "LESS_THAN"}, {">=", "GREATER_THAN_OR_EQUAL"}, {"<=", "LESS_THAN_OR_EQUAL"},
+    {"&&", "LOGICAL_AND"}, {"||", "LOGICAL_OR"}, {"!", "LOGICAL_NOT"}, {"&", "BITWISE_AND"},
+    {"|", "BITWISE_OR"}, {"^", "BITWISE_XOR"}, {"~", "BITWISE_NOT"}, {"<<", "BITWISE_LEFT_SHIFT"},
+    {">>", "BITWISE_RIGHT_SHIFT"}, {"+=", "ADD_ASSIGN"}, {"-=", "SUBTRACT_ASSIGN"}, {"*=", "MULTIPLY_ASSIGN"},
+    {"/=", "DIVIDE_ASSIGN"}, {"%=", "MODULUS_ASSIGN"}, {"&=", "BITWISE_AND_ASSIGN"},
+    {"|=", "BITWISE_OR_ASSIGN"}, {"^=", "BITWISE_XOR_ASSIGN"}, {"<<=", "LEFT_SHIFT_ASSIGN"},
+    {">>=", "RIGHT_SHIFT_ASSIGN"}, {"=", "ASSIGNMENT"}, {"?", "TERNARY_CONDITIONAL"}, {":", "TERNARY_SEPARATOR"}
+};
+
+vector<pair<string, string>> preprocessors = {
+    {"#include", "INCLUDE_HEADER"}, {"#define", "DEFINE_MACRO"}, {"#undef", "UNDEFINE_MACRO"},
+    {"#if", "IF_CONDITIONAL"}, {"#ifdef", "IF_DEFINED"}, {"#ifndef", "IF_NOT_DEFINED"},
+    {"#else", "ELSE_CONDITIONAL"}, {"#elif", "ELIF_CONDITIONAL"}, {"#endif", "END_IF_CONDITIONAL"},
+    {"#error", "ERROR_MESSAGE"}, {"#warning", "WARNING_MESSAGE"}, {"#pragma", "PRAGMA_DIRECTIVE"},
+    {"#line", "SET_LINE_NUMBER"}
+};
+
+vector<pair<string, string>> delimiters = {
+    {"{", "LEFT_CURLY_BRACE"}, {"}", "RIGHT_CURLY_BRACE"}, {"(", "LEFT_PARENTHESIS"}, {")", "RIGHT_PARENTHESIS"},
+    {"[", "LEFT_SQUARE_BRACKET"}, {"]", "RIGHT_SQUARE_BRACKET"}, {";", "SEMICOLON"}, {",", "COMMA"},
+    {":", "COLON"}, {"::", "SCOPE_RESOLUTION"}, {".", "DOT"}, {"->", "ARROW_OPERATOR"},
+    {"...", "ELLIPSIS"}, {"#", "HASH"}, {"##", "DOUBLE_HASH"}, {"@", "AT_SYMBOL"}
+};
+
+void define_tokens() {
+    TOKENS["KEYWORD"] = keywords;
+    TOKENS["OPERATOR"] = operators;
+    TOKENS["PREPROCESSORS"] = preprocessors;
+    TOKENS["DELIMITER"] = delimiters;
+}
+
+void store_tokens_to_file(const string& filename) {
+    ofstream outFile(filename);
+    
+    if (!outFile) {
+        cerr << "Error: Could not open file for writing." << endl;
+        return;
+    }
+
+    for (const auto& category : TOKENS) {
+        outFile << "\\ \n" << category.first << "\n"; // Write category name
+
+        for (const auto& token : category.second) {
+            outFile << token.first << " " << token.second << "\n";
+        }
+    }
+
+    outFile << "\\"  ; // Separate categories
+
+    outFile.close();
+    cout << "Tokens stored successfully in " << filename << endl;
+}
+
+int main() {
+    define_tokens();
+    store_tokens_to_file("tokens_map.txt");
+    return 0;
+}
