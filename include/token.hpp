@@ -27,11 +27,7 @@ enum TOKEN_TYPE {
     COLON,
     STRING_LITERAL,
     SEMICOLON,
-    COMMENT,
     PREPROCESSOR,
-    WHITESPACE,
-    NEWLINE,
-    END_OF_FILE,
     UNKNOWN,
 
     // Keywords
@@ -84,7 +80,7 @@ enum tState {
     Nullptr, Unknown
 };
 
-const unordered_map<string, TOKEN_TYPE> keywordMap = {
+unordered_map<string, TOKEN_TYPE> keywordMap = {
     {"auto", TOKEN_TYPE::AUTO},
     {"break", TOKEN_TYPE::BREAK},
     {"case", TOKEN_TYPE::CASE},
@@ -138,11 +134,7 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case COLON:          return "COLON";
         case STRING_LITERAL: return "STRING_LITERAL";
         case SEMICOLON:      return "SEMICOLON";
-        case COMMENT:        return "COMMENT";
         case PREPROCESSOR:   return "PREPROCESSOR";
-        case WHITESPACE:     return "WHITESPACE";
-        case NEWLINE:        return "NEWLINE";
-        case END_OF_FILE:    return "END_OF_FILE";
         case AUTO:           return "AUTO";
         case BREAK:          return "BREAK";
         case CASE:           return "CASE";
@@ -205,11 +197,11 @@ public:
     }
 };
 
-bool is_Identifier_Start(char c) {
+const inline bool is_Identifier_Start(char c) {
     return isalpha(c) || c=='_';
 }
 
-bool is_Identifier(char c) {
+const inline bool is_Identifier(char c) {
     return isalnum(c) || c=='_';
 }
 

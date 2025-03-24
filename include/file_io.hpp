@@ -4,8 +4,6 @@
 #include "all.hpp"
 #include "log.hpp"
 
-using namespace std;
-
 static string msg = "";
 
 FILE *open_file(const char *filename) {
