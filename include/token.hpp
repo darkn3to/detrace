@@ -27,6 +27,8 @@ enum TOKEN_TYPE {
     COLON,
     STRING_LITERAL,
     SEMICOLON,
+    COMMA,
+    DOT,
     PREPROCESSOR,
     UNKNOWN,
 
@@ -134,6 +136,8 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case COLON:          return "COLON";
         case STRING_LITERAL: return "STRING_LITERAL";
         case SEMICOLON:      return "SEMICOLON";
+        case COMMA:          return "COMMA";
+        case DOT:            return "DOT";
         case PREPROCESSOR:   return "PREPROCESSOR";
         case AUTO:           return "AUTO";
         case BREAK:          return "BREAK";
@@ -193,6 +197,7 @@ public:
     
     void describe(FILE *out) const {
         string typeStr = tokenTypeToString(type);
+        cout << "Lexeme: " << lexeme << " | Type: " << typeStr << endl;
         fprintf(out, "%s ", typeStr.c_str());
     }
 };

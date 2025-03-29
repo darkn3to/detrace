@@ -23,7 +23,7 @@ public:
         buffer.resize(size);
         fread(&buffer[0], 1, size, file);
         
-        std::string tokenBuffer;
+        string tokenBuffer;
         tokenBuffer.reserve(64);
         
         tState currState = tState::NewToken;
@@ -61,6 +61,17 @@ public:
                         currToken.set(tokenBuffer, TOKEN_TYPE::IDENTIFIER);
                         nextState = tState::Identifier;
                     }
+                    else if (c >= '0' && c <= '9') {
+                        tokenBuffer.push_back(c);
+                        nextState = tState::Number;
+                    }
+                    else if (c == '+' || c == '-' || c == '*' || c == '/' ||
+                             c == '%' || c == '=' || c == '!' || c == '<' ||
+                             c == '>' || c == '&' || c == '|') {
+                        tokenBuffer.push_back(c);
+                        currToken.set(tokenBuffer, TOKEN_TYPE::OPERATOR);
+                        nextState = tState::AcceptToken;
+                    }
                     else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
                         nextState = tState::NewToken;
                     }
@@ -82,9 +93,18 @@ public:
                         nextState = tState::AcceptToken;
                     }
                     else if (c == ':' || c == ';') {
-                        tokenBuffer = std::string(1, c);
+                        tokenBuffer = string(1, c);
                         currToken.set(tokenBuffer, (c == ':') ? TOKEN_TYPE::COLON : TOKEN_TYPE::SEMICOLON);
                         nextState = tState::AcceptToken;
+                    }
+                    else if (c == ',' || c == '.') {
+                        tokenBuffer = string(1, c);
+                        currToken.set(tokenBuffer, (c == ',') ? TOKEN_TYPE::COMMA : TOKEN_TYPE::DOT);
+                        nextState = tState::AcceptToken;
+                    }
+                    else if (c == '/') {
+                        tokenBuffer.push_back(c);
+                        nextState = tState::Symbol;
                     }
                     else {
                         tokenBuffer = std::string(1, c);
@@ -100,10 +120,33 @@ public:
                     }
                     else {
                         if (keywordMap.find(tokenBuffer) != keywordMap.end()) {
-                            currToken.set(tokenBuffer, TOKEN_TYPE::KEYWORD);
+                            currToken.set(tokenBuffer, keywordMap[tokenBuffer]);
+                        }
+                        else {
+                            currToken.set(tokenBuffer, TOKEN_TYPE::IDENTIFIER);
                         }
 
                         if (pos > 0) pos--;
+                        nextState = tState::AcceptToken;
+                    }
+                } break;
+
+                case tState::Number: {
+                    if (c >= '0' && c <= '9') {
+                        tokenBuffer.push_back(c);
+                        nextState = tState::Number;
+                    }
+                    else if (c == '.') {
+                        tokenBuffer.push_back(c);
+                        nextState = tState::Number;
+                    }
+                    else if (c == 'e' || c == 'E') {
+                        tokenBuffer.push_back(c);
+                        nextState = tState::Number;
+                    }
+                    else {
+                        if (pos > 0) pos--;
+                        currToken.set(tokenBuffer, TOKEN_TYPE::NUMBER);
                         nextState = tState::AcceptToken;
                     }
                 } break;

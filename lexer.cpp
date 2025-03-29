@@ -8,19 +8,19 @@
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <input_file1> <input_file2> ... <input_fileN>" << std::endl;
+        cerr << "Usage: " << argv[0] << " <input_file1> <input_file2> ... <input_fileN>" << std::endl;
         return 1;
     }
 
     for (int i = 1; i < argc; ++i) {
         FILE *file = open_file(argv[i]);
-        auto start = std::chrono::high_resolution_clock::now();
+        //auto start = chrono::high_resolution_clock::now();
         if (file != NULL) {
             
-            std::string output_filename = std::string(argv[i]) + ".txt";
+            string output_filename = string(argv[i]) + "_output.txt";
             FILE *out = fopen(output_filename.c_str(), "w");
             FSM mach;
-            std::vector<Token> tokens = mach.fsm(file);
+            vector<Token> tokens = mach.fsm(file);
             for (const auto& token : tokens) {
                 token.describe(out);
             }
@@ -28,12 +28,12 @@ int main(int argc, char **argv) {
             close_file(argv[i], file);
             fclose(out);
         } else {
-            std::cerr << "Failed to open file: " << argv[i] << std::endl;
+            cerr << "Failed to open file: " << argv[i] << endl;
         }
 
-        auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end - start;
-    std::cout << duration.count() << " seconds" << std::endl;
+        /*auto end = chrono::high_resolution_clock::now();
+        chrono::duration<double> duration = end - start;
+        cout << duration.count() << " seconds" << endl;*/
     }
 
 
