@@ -9,7 +9,7 @@
 #include <string>
 
 enum TOKEN_TYPE {
-    SYMBOL,
+    SYMBOL = 1,
     IDENTIFIER,
     NUMBER,
     STRING,
@@ -26,6 +26,7 @@ enum TOKEN_TYPE {
     RABRACKET,
     COLON,
     STRING_LITERAL,
+    CHAR_LITERAL,
     SEMICOLON,
     COMMA,
     DOT,
@@ -63,16 +64,34 @@ enum TOKEN_TYPE {
     UNSIGNED,
     VOID,
     VOLATILE,
-    WHILE
+    WHILE,
+    PLUS,      
+    MINUS,    
+    MULTIPLY, 
+    DIVIDE,     
+    MODULO,   
+    ASSIGN,     
+    NOT,        
+    LESS,      
+    GREATER,    
+    BIT_AND,    
+    BIT_OR,     
+    EQUAL,      
+    NOT_EQUAL,  
+    LESS_EQUAL, 
+    GREATER_EQUAL,
+    AND,        
+    OR   
 };
 
 enum tState {
     NewToken, AcceptToken,
     Identifier, Symbol,
     Number, String, CharLiteral,
-    Add, Sub, Mul, Div, Mod,
-    And, Or, Not, BitAnd, BitOr, BitXor, BitNot,
-    Assign, Equal, NotEqual, Less, Greater, LessEqual, GreaterEqual,
+    Plus, Minus, Multiply, Divide, Modulo,
+    Assign, Not, Less, Greater,
+    BitAnd, BitOr, Equal, NotEqual,
+    LessEqual, GreaterEqual, And, Or,
     ShiftLeft, ShiftRight,
     Increment, Decrement,
     Ternary, Colon, Arrow,
@@ -81,6 +100,13 @@ enum tState {
     True, False,
     Nullptr, Unknown
 };
+
+unordered_map<string, TOKEN_TYPE> operatorMap = {
+    {"+", TOKEN_TYPE::PLUS}, {"-", TOKEN_TYPE::MINUS}, {"*", TOKEN_TYPE::MULTIPLY}, {"/", TOKEN_TYPE::DIVIDE}, {"%", TOKEN_TYPE::MODULO},
+    {"=", TOKEN_TYPE::ASSIGN}, {"!", TOKEN_TYPE::NOT}, {"<", TOKEN_TYPE::LESS}, {">", TOKEN_TYPE::GREATER}, {"&", TOKEN_TYPE::BIT_AND}, {"|", TOKEN_TYPE::BIT_OR},
+    {"==", TOKEN_TYPE::EQUAL}, {"!=", TOKEN_TYPE::NOT_EQUAL}, {"<=", TOKEN_TYPE::LESS_EQUAL}, {">=", TOKEN_TYPE::GREATER_EQUAL}, {"&&", TOKEN_TYPE::AND}, {"||", TOKEN_TYPE::OR}
+};
+
 
 unordered_map<string, TOKEN_TYPE> keywordMap = {
     {"auto", TOKEN_TYPE::AUTO},
@@ -135,6 +161,7 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case RABRACKET:      return "RABRACKET";
         case COLON:          return "COLON";
         case STRING_LITERAL: return "STRING_LITERAL";
+        case CHAR_LITERAL:   return "CHAR_LITERAL";
         case SEMICOLON:      return "SEMICOLON";
         case COMMA:          return "COMMA";
         case DOT:            return "DOT";
@@ -170,9 +197,29 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case VOID:           return "VOID";
         case VOLATILE:       return "VOLATILE";
         case WHILE:          return "WHILE";
+        case PLUS:          return "PLUS";
+        case MINUS:         return "MINUS";
+        case MULTIPLY:      return "MULTIPLY";
+        case DIVIDE:        return "DIVIDE";
+        case MODULO:        return "MODULO";
+        case ASSIGN:        return "ASSIGN";
+        case NOT:           return "NOT";
+        case LESS:          return "LESS";
+        case GREATER:       return "GREATER";
+        case BIT_AND:       return "BIT_AND";
+        case BIT_OR:        return "BIT_OR";
+        case EQUAL:         return "EQUAL";
+        case NOT_EQUAL:     return "NOT_EQUAL";
+        case LESS_EQUAL:    return "LESS_EQUAL";
+        case GREATER_EQUAL: return "GREATER_EQUAL";
+        case AND:           return "AND";
+        case OR:            return "OR";
+
         default:             return "UNKNOWN";
     }
 }
+
+string buffer;
 
 class Token {
 public:
@@ -197,9 +244,13 @@ public:
     
     void describe(FILE *out) const {
         string typeStr = tokenTypeToString(type);
-        cout << "Lexeme: " << lexeme << " | Type: " << typeStr << endl;
+        //cout << "Lexeme: " << lexeme << " | Type: " << typeStr << endl;
+        // Removed: if (flag) { buffer.clear(); flag = false; }
+        buffer += to_string(static_cast<int>(type)) + " ";
+        cout << static_cast<int>(type) << " ";
         fprintf(out, "%s ", typeStr.c_str());
     }
+    
 };
 
 const inline bool is_Identifier_Start(char c) {

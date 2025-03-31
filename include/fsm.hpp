@@ -11,7 +11,6 @@ class FSM {
 public:
     std::vector<Token> fsm(FILE *file) {
         std::vector<Token> tokens;
-        
         fseek(file, 0, SEEK_END);
         long size = ftell(file);
         fseek(file, 0, SEEK_SET);
@@ -19,7 +18,6 @@ public:
             throw Error("[FSM] The provided file is EMPTY!");
         }
         
-        string buffer;
         buffer.resize(size);
         fread(&buffer[0], 1, size, file);
         
@@ -45,6 +43,12 @@ public:
                         currToken.set(tokenBuffer, TOKEN_TYPE::PREPROCESSOR);
                         nextState = tState::AcceptToken;
                     }
+                    else if (c == '\'') {
+                        pos++;
+                        currToken.set(std::string(1, buffer[pos]), TOKEN_TYPE::CHAR_LITERAL);
+                        pos++;
+                        nextState = tState::AcceptToken;
+                    }
                     else if (c == '"') {
                         tokenBuffer.push_back(c); 
                         while (++pos < buffer.size() && buffer[pos] != '"') {
@@ -65,11 +69,9 @@ public:
                         tokenBuffer.push_back(c);
                         nextState = tState::Number;
                     }
-                    else if (c == '+' || c == '-' || c == '*' || c == '/' ||
-                             c == '%' || c == '=' || c == '!' || c == '<' ||
-                             c == '>' || c == '&' || c == '|') {
+                    else if (operatorMap.find(string(1, c)) != operatorMap.end()) {
                         tokenBuffer.push_back(c);
-                        currToken.set(tokenBuffer, TOKEN_TYPE::OPERATOR);
+                        currToken.set(tokenBuffer, operatorMap[tokenBuffer]);
                         nextState = tState::AcceptToken;
                     }
                     else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {

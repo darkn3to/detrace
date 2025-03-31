@@ -1,6 +1,7 @@
 #include "file_io.hpp"
 #include "token.hpp"
 #include "fsm.hpp"
+#include "winnow.hpp"
 #include <vector>
 #include <chrono>
 #include <iostream>
@@ -24,6 +25,10 @@ int main(int argc, char **argv) {
             for (const auto& token : tokens) {
                 token.describe(out);
             }
+            buffer += "\0";
+
+            fseek(out, 0, SEEK_SET);
+            winnow(5, 3, out);
 
             close_file(argv[i], file);
             fclose(out);
