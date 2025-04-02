@@ -9,8 +9,8 @@
 
 class FSM {
 public:
-    std::vector<Token> fsm(FILE *file) {
-        std::vector<Token> tokens;
+    vector<Token> fsm(FILE *file) {
+        vector<Token> tokens;
         fseek(file, 0, SEEK_END);
         long size = ftell(file);
         fseek(file, 0, SEEK_SET);
@@ -51,15 +51,21 @@ public:
                     }
                     else if (c == '"') {
                         tokenBuffer.push_back(c); 
-                        while (++pos < buffer.size() && buffer[pos] != '"') {
-                            tokenBuffer.push_back(buffer[pos]);
-                        }
-                        if (pos < buffer.size()) {
-                            tokenBuffer.push_back(buffer[pos]);
+                        while (++pos < buffer.size()) {
+                            c = buffer[pos];
+                            tokenBuffer.push_back(c);
+                            if (c == '\\') { 
+                                if (++pos < buffer.size()) {
+                                    tokenBuffer.push_back(buffer[pos]);
+                                }
+                            } else if (c == '"') { 
+                                break;
+                            }
                         }
                         currToken.set(tokenBuffer, TOKEN_TYPE::STRING_LITERAL);
                         nextState = tState::AcceptToken;
                     }
+                    
                     else if (is_Identifier_Start(c)) {
                         tokenBuffer.push_back(c);
                         currToken.set(tokenBuffer, TOKEN_TYPE::IDENTIFIER);
@@ -71,6 +77,11 @@ public:
                     }
                     else if (operatorMap.find(string(1, c)) != operatorMap.end()) {
                         tokenBuffer.push_back(c);
+                        if (pos + 1 < buffer.size() && operatorMap.find(tokenBuffer + string(1, buffer[pos + 1])) != operatorMap.end()) {
+                            ++pos; 
+                            tokenBuffer.push_back(buffer[pos]);
+                            //currToken.set(operatorMap[tokenBuffer]);
+                        }
                         currToken.set(tokenBuffer, operatorMap[tokenBuffer]);
                         nextState = tState::AcceptToken;
                     }

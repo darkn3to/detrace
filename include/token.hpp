@@ -71,6 +71,8 @@ enum TOKEN_TYPE {
     DIVIDE,     
     MODULO,   
     ASSIGN,     
+    PLUS_ASSIGN,
+    MINUS_ASSIGN,
     NOT,        
     LESS,      
     GREATER,    
@@ -81,7 +83,10 @@ enum TOKEN_TYPE {
     LESS_EQUAL, 
     GREATER_EQUAL,
     AND,        
-    OR   
+    OR,
+    INCREMENT,
+    DECREMENT,
+
 };
 
 enum tState {
@@ -104,7 +109,9 @@ enum tState {
 unordered_map<string, TOKEN_TYPE> operatorMap = {
     {"+", TOKEN_TYPE::PLUS}, {"-", TOKEN_TYPE::MINUS}, {"*", TOKEN_TYPE::MULTIPLY}, {"/", TOKEN_TYPE::DIVIDE}, {"%", TOKEN_TYPE::MODULO},
     {"=", TOKEN_TYPE::ASSIGN}, {"!", TOKEN_TYPE::NOT}, {"<", TOKEN_TYPE::LESS}, {">", TOKEN_TYPE::GREATER}, {"&", TOKEN_TYPE::BIT_AND}, {"|", TOKEN_TYPE::BIT_OR},
-    {"==", TOKEN_TYPE::EQUAL}, {"!=", TOKEN_TYPE::NOT_EQUAL}, {"<=", TOKEN_TYPE::LESS_EQUAL}, {">=", TOKEN_TYPE::GREATER_EQUAL}, {"&&", TOKEN_TYPE::AND}, {"||", TOKEN_TYPE::OR}
+    {"==", TOKEN_TYPE::EQUAL}, {"!=", TOKEN_TYPE::NOT_EQUAL}, {"<=", TOKEN_TYPE::LESS_EQUAL}, {">=", TOKEN_TYPE::GREATER_EQUAL}, {"&&", TOKEN_TYPE::AND}, {"||", TOKEN_TYPE::OR},
+    {"++", TOKEN_TYPE::INCREMENT}, {"--", TOKEN_TYPE::DECREMENT}, {"+=", TOKEN_TYPE::PLUS_ASSIGN},
+    {"-=", TOKEN_TYPE::MINUS_ASSIGN}
 };
 
 
@@ -203,6 +210,10 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case DIVIDE:        return "DIVIDE";
         case MODULO:        return "MODULO";
         case ASSIGN:        return "ASSIGN";
+        case INCREMENT:      return "INCREMENT";
+        case DECREMENT:      return "DECREMENT";
+        case PLUS_ASSIGN:   return "PLUS_ASSIGN";
+        case MINUS_ASSIGN:  return "MINUS_ASSIGN";
         case NOT:           return "NOT";
         case LESS:          return "LESS";
         case GREATER:       return "GREATER";
@@ -244,10 +255,10 @@ public:
     
     void describe(FILE *out) const {
         string typeStr = tokenTypeToString(type);
-        //cout << "Lexeme: " << lexeme << " | Type: " << typeStr << endl;
+        cout << "Lexeme: " << lexeme << " | Type: " << typeStr << endl;
         // Removed: if (flag) { buffer.clear(); flag = false; }
         buffer += to_string(static_cast<int>(type)) + " ";
-        cout << static_cast<int>(type) << " ";
+        //cout << static_cast<int>(type) << " ";
         fprintf(out, "%s ", typeStr.c_str());
     }
     

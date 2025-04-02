@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        cerr << "Usage: " << argv[0] << " <input_file1> <input_file2> ... <input_fileN>" << std::endl;
+        cerr << "Usage: " << argv[0] << " <input_file1> <input_file2> ... <input_fileN>" << endl;
         return 1;
     }
 
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
             buffer += "\0";
 
             fseek(out, 0, SEEK_SET);
-            winnow(5, 3, out);
+            //winnow(5, 3, out);
 
             close_file(argv[i], file);
             fclose(out);
