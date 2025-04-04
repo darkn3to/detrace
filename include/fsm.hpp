@@ -188,7 +188,8 @@ public:
             currToken.set(tokenBuffer, currToken.type);
             tokens.push_back(currToken);
         }
-        
+        //added this
+        buffer.clear();
         return tokens;
     }
 };

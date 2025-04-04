@@ -231,6 +231,7 @@ string tokenTypeToString(TOKEN_TYPE type) {
 }
 
 string buffer;
+vector<unsigned short> iToken;
 
 class Token {
 public:
@@ -257,8 +258,9 @@ public:
         string typeStr = tokenTypeToString(type);
         cout << "Lexeme: " << lexeme << " | Type: " << typeStr << endl;
         // Removed: if (flag) { buffer.clear(); flag = false; }
-        buffer += to_string(static_cast<int>(type)) + " ";
+        //buffer += to_string(type) + " ";
         //cout << static_cast<int>(type) << " ";
+        iToken.push_back(static_cast<unsigned short>(type));
         fprintf(out, "%s ", typeStr.c_str());
     }
     

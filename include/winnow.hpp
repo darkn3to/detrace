@@ -4,46 +4,39 @@
 #include "token.hpp"
 #include <climits>
 #include <cstring>
-#include <deque>
-
-void print(deque<string> &dq) {
-    for (const auto& str : dq) {
-        cout << str << " ";
-    }
-    cout << endl;
-}
 
 void winnow(const int window, const int k, FILE *file) {
     unordered_map<int, string> htable;
     htable.reserve(window);
 
-    string temp;
-    temp.reserve(64 * k);
-    //unordered_map<string, string> prehash;
-    //int rt = 0, minimum = 0;
-    short i = 0;
+    int iToken_size = iToken.size();  //iToken is in token.hpp
 
-    char *token = strtok(buffer.data(), " ");
-    //int lp = 0, rp = k-1;
-    deque<string> dq;
+    unsigned short* circular_buffer = new unsigned short[k];
 
-    while (i < k && token != nullptr) {
-        dq.push_back(token);
-        token = strtok(nullptr, " ");
-        ++i;
+    int j = 0;
+    for (int i = 0; i < k && j < iToken_size; i++, j++) {
+        circular_buffer[i] = iToken[j];
     }
+    
+    /*cout << "Initial window: ";
+    for (int i = 0; i < k; i++) {
+        cout << circular_buffer[i] << " ";
+    }
+    cout << endl;
+    */
 
-    //htable[rt] ;
-
-    while (token != nullptr) {
-        //cout << token << endl;
-        //rt = (rt + 1) % window;
-        print(dq);
-        dq.pop_front();
-        token = strtok(nullptr, " ");
-        if (token != nullptr) { 
-            dq.push_back(token);
+    unsigned short rp = 0;
+    
+    while (j < iToken_size) {
+        circular_buffer[rp] = iToken[j++];
+        rp = (rp + 1) % k;
+        /*cout << "Window: ";
+        for (int i = 0; i < k; i++) {
+            int idx = (rp + i) % k;
+            cout << circular_buffer[idx] << " ";
         }
+        cout << endl;
+        */
     }
 
 }

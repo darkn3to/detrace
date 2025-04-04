@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
             buffer += "\0";
 
             fseek(out, 0, SEEK_SET);
-            //winnow(5, 3, out);
+            winnow(5, 3, out);
 
             close_file(argv[i], file);
             fclose(out);
