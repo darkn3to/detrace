@@ -4,15 +4,18 @@
 #define MOD 1000000007
 
 #include "token.hpp"
+#include <climits>
 #include <cstring>
 #include <vector>
+#include <optional>
 
 using namespace std;
+using std::optional;
 
 unsigned short* circular_buffer;
 
-unsigned long rhash(const int k, const int rp) {
-    unsigned long h = 0;
+unsigned int rhash(const int k, const int rp) {
+    unsigned int h = 0;
     int idx;
     for (int i = 0; i < k; i++) {
         idx = (rp + i) % k;
@@ -21,12 +24,10 @@ unsigned long rhash(const int k, const int rp) {
     return h;
 }
 
-void winnow(const int window, const int k, FILE *file) {
+optional<vector<unsigned int>> winnow(const int window, const int k, FILE *file, vector<unsigned short> &iToken, int iToken_size, bool ret) {
     
     vector<unsigned short> htable;
-    vector<unsigned long> fingerprints;
-
-    int iToken_size = iToken.size();  // iToken is defined in token.hpp
+    vector<unsigned int> fingerprints;
 
     circular_buffer = new unsigned short[k];
 
@@ -73,11 +74,23 @@ void winnow(const int window, const int k, FILE *file) {
         r = (r + 1) % window;
     }
 
-    for (auto it : fingerprints) {
+    /*for (auto it : fingerprints) {
         cout << it << " ";
-    } 
+    } */
+
+
     
+    htable.clear();   //delete me if anything goes wrong
     delete[] circular_buffer;
+
+    for (const unsigned int& fingerprint : fingerprints) {
+        fprintf(file, "%d ", fingerprint); 
+    }
+
+    if (ret) 
+        return fingerprints;
+    else 
+        return nullopt;
 }
 
 #endif // WINNOW_HPP
