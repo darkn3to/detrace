@@ -231,7 +231,6 @@ string tokenTypeToString(TOKEN_TYPE type) {
 }
 
 string buffer;
-vector<unsigned short> iToken;
 
 class Token {
 public:
@@ -254,9 +253,9 @@ public:
         this->magnitude = magnitude;
     }
     
-    void describe(FILE *out) const {
+    void describe(FILE *out, vector<unsigned short> &iToken) const {
         string typeStr = tokenTypeToString(type);
-        cout << "Lexeme: " << lexeme << " | Type: " << typeStr << endl;
+        //cout << "Lexeme: " << lexeme << " | Type: " << typeStr << endl;
         // Removed: if (flag) { buffer.clear(); flag = false; }
         //buffer += to_string(type) + " ";
         //cout << static_cast<int>(type) << " ";
