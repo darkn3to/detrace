@@ -10,37 +10,20 @@ using namespace std;
 
 namespace fs = filesystem;
 
-static FILE *logFile = NULL;
-
-void loginit() {
-    if (!logFile)
-        logFile = fopen("logs.txt", "w");
-    else 
-        logFile = fopen("logs.txt", "a");
-}
-
-inline void logClose() {
-    fclose(logFile);
-}
-
-inline void log(const string message) {
-    fprintf(logFile, "%s\n", message.c_str());
-}
-
-FILE* initializeOutputFile(const string& filename) {
+FILE* initializeOutputFile(const string& filename, const string &filetype) {
     const string parentDir = "analysis";
-    const string fingerprintsDir = parentDir + "/fingerprints";
+    const string childDir = parentDir + "/" + filetype;
 
     try {
         if (!fs::exists(parentDir)) {
             fs::create_directories(parentDir);
         }
 
-        if (!fs::exists(fingerprintsDir)) {
-            fs::create_directories(fingerprintsDir);
+        if (!fs::exists(childDir)) {
+            fs::create_directories(childDir);
         }
 
-        string fullPath = fingerprintsDir + "/" + filename;
+        string fullPath = childDir + "/" + filename;
 
         FILE* file = fopen(fullPath.c_str(), "w");
         if (file == NULL) {
@@ -50,7 +33,8 @@ FILE* initializeOutputFile(const string& filename) {
 
         cout << "File initialized at: " << fullPath << endl;
         return file;
-    } catch (const fs::filesystem_error& e) {
+    } 
+    catch (const fs::filesystem_error& e) {
         cerr << "Error creating directories: " << e.what() << endl;
         return NULL;
     }

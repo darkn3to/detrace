@@ -9,6 +9,10 @@
 
 class FSM {
 public:
+    vector<unsigned short> iToken;
+
+    string buffer;
+    
     vector<Token> fsm(FILE *file) {
         vector<Token> tokens;
         fseek(file, 0, SEEK_END);
@@ -18,8 +22,10 @@ public:
             throw Error("[FSM] The provided file is EMPTY!");
         }
         
-        buffer.resize(size);
-        fread(&buffer[0], 1, size, file);
+        this->buffer.resize(size);
+        if ((long)fread(&this->buffer[0], 1, size, file) != size) {
+            throw Error("[FSM] Failed to read the entire file into the buffer!");
+        }
         
         string tokenBuffer;
         tokenBuffer.reserve(64);
@@ -29,15 +35,15 @@ public:
         Token currToken;
         size_t pos = 0;
         
-        while (pos < buffer.size()) {
-            char c = buffer[pos];
+        while (pos < this->buffer.size()) {
+            char c = this->buffer[pos];
             switch (currState) {
                 case tState::NewToken: {
                     tokenBuffer.clear();
                     currToken.set(tokenBuffer, TOKEN_TYPE::UNKNOWN);
                     if (c == '#') {
                         tokenBuffer.push_back('#');
-                        while (++pos < buffer.size() && buffer[pos] != '\n') {
+                        while (++pos < this->buffer.size() && this->buffer[pos] != '\n') {
                             tokenBuffer.push_back(buffer[pos]);
                         }
                         currToken.set(tokenBuffer, TOKEN_TYPE::PREPROCESSOR);
@@ -45,17 +51,17 @@ public:
                     }
                     else if (c == '\'') {
                         pos++;
-                        currToken.set(std::string(1, buffer[pos]), TOKEN_TYPE::CHAR_LITERAL);
+                        currToken.set(std::string(1, this->buffer[pos]), TOKEN_TYPE::CHAR_LITERAL);
                         pos++;
                         nextState = tState::AcceptToken;
                     }
                     else if (c == '"') {
                         tokenBuffer.push_back(c); 
-                        while (++pos < buffer.size()) {
-                            c = buffer[pos];
+                        while (++pos < this->buffer.size()) {
+                            c = this->buffer[pos];
                             tokenBuffer.push_back(c);
                             if (c == '\\') { 
-                                if (++pos < buffer.size()) {
+                                if (++pos < this->buffer.size()) {
                                     tokenBuffer.push_back(buffer[pos]);
                                 }
                             } else if (c == '"') { 
@@ -77,7 +83,7 @@ public:
                     }
                     else if (operatorMap.find(string(1, c)) != operatorMap.end()) {
                         tokenBuffer.push_back(c);
-                        if (pos + 1 < buffer.size() && operatorMap.find(tokenBuffer + string(1, buffer[pos + 1])) != operatorMap.end()) {
+                        if (pos + 1 < this->buffer.size() && operatorMap.find(tokenBuffer + string(1, this->buffer[pos + 1])) != operatorMap.end()) {
                             ++pos; 
                             tokenBuffer.push_back(buffer[pos]);
                             //currToken.set(operatorMap[tokenBuffer]);
@@ -189,9 +195,10 @@ public:
             tokens.push_back(currToken);
         }
         //added this
-        buffer.clear();
+        this->buffer.clear();
         return tokens;
     }
+
 };
 
 #endif // FSM_HPP

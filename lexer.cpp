@@ -7,6 +7,7 @@
 #include <string>
 #include <stdbool.h>
 #include <thread>
+#include <chrono>
 #include <filesystem>
 
 namespace fs = filesystem;
@@ -14,20 +15,21 @@ namespace fs = filesystem;
 vector<unsigned int> orig_fingerprints;
 
 void process_file(const char *filename, bool originalFile) {
-    FILE *file = open_file(filename); // Use filename directly
+    FILE *file = open_file(filename); 
     if (file != NULL) {
-        string output_filename = string(filename) + "_output.txt";
-        
-        FILE *out = fopen(output_filename.c_str(), "w");\
-        FILE *logFingerprints = initializeOutputFile(std::string(filename) + "_fingerprints.txt");
+
+        string fname_str(filename);
+        FILE *logTokens = initializeOutputFile((fname_str + "_output.txt").c_str(), "tokens");
+        FILE *logFingerprints = initializeOutputFile((fname_str + "_fingerprints.txt").c_str(), "fingerprints");
+
         FSM mach;
         vector<Token> tokens = mach.fsm(file);
         for (const auto& token : tokens) {
-            token.describe(out, mach.iToken);
+            token.describe(logTokens, mach.iToken);
         }
-        buffer += "\0";
         
-        fseek(out, 0, SEEK_SET);
+        fseek(logTokens, 0, SEEK_SET);
+        
         
         if (originalFile) {
             auto result = winnow(5, 3, logFingerprints, mach.iToken, mach.iToken.size(), true);
@@ -39,7 +41,7 @@ void process_file(const char *filename, bool originalFile) {
 
         mach.iToken.clear();
         close_file(filename, file);
-        fclose(out);
+        fclose(logTokens);
         fclose(logFingerprints);
     } 
     else {
@@ -58,16 +60,17 @@ int main(int argc, char **argv) {
         fs::create_directories("analysis");
     }
 
+    auto start = chrono::high_resolution_clock::now();
+
     process_file(argv[1], true); // Process the original file separately
-    buffer.clear();
     
     if (string(argv[argc - 1]) == "--m" || string(argv[argc - 1]) == "--M") {
-        unsigned const int lprocs = thread::hardware_concurrency();
+        const unsigned int lprocs = max(1u, thread::hardware_concurrency());
         vector<std::thread> threads;
     
         for (int i = 2; i < argc - 1; ++i) {
-            threads.emplace_back([=]() {
-                process_file(argv[i], false);
+            threads.emplace_back([filename = argv[i]]() {
+                process_file(filename, false);
             });
 
             if (threads.size() >= lprocs) {
@@ -86,12 +89,17 @@ int main(int argc, char **argv) {
         for (int i = 2; i < argc; ++i) {
             process_file(argv[i], false); 
         }
+
     }
     else {
         cerr << "Invalid option: " << argv[argc - 1] << endl;
         cerr << "Usage: " << argv[0] << " <original_file> <input_file> --m" << endl;
         return 1;
     }
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cout << duration.count() << " seconds" << endl;
 
     return 0;
 }

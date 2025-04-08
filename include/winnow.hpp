@@ -12,9 +12,7 @@
 using namespace std;
 using std::optional;
 
-unsigned short* circular_buffer;
-
-unsigned int rhash(const int k, const int rp) {
+unsigned int rhash(const int k, const int rp, const vector<unsigned short>& circular_buffer) {
     unsigned int h = 0;
     int idx;
     for (int i = 0; i < k; i++) {
@@ -24,19 +22,18 @@ unsigned int rhash(const int k, const int rp) {
     return h;
 }
 
-optional<vector<unsigned int>> winnow(const int window, const int k, FILE *file, vector<unsigned short> &iToken, int iToken_size, bool ret) {
+optional<vector<unsigned int>> winnow(const int window, const int k, FILE * const file, vector<unsigned short> &iToken, int iToken_size, bool ret) {
     
     vector<unsigned short> htable;
     vector<unsigned int> fingerprints;
-
-    circular_buffer = new unsigned short[k];
+    vector<unsigned short> circular_buffer(k);
 
     int j = 0, r = 0, min = 0;
     for (int i = 0; i < k && j < iToken_size; i++, j++) {
         circular_buffer[i] = iToken[j];
     }
 
-    htable.push_back(rhash(k, 0));
+    htable.push_back(rhash(k, 0, circular_buffer));
     r = (r + 1) % window;
     
 
@@ -46,10 +43,10 @@ optional<vector<unsigned int>> winnow(const int window, const int k, FILE *file,
         circular_buffer[rp] = iToken[j++];
         rp = (rp + 1) % k;
         if (htable.size() < static_cast<unsigned short>(window)) {
-            htable.push_back(rhash(k, rp));
+            htable.push_back(rhash(k, rp, circular_buffer));
         }
         else {
-            htable[r] = rhash(k, rp);
+            htable[r] = rhash(k, rp, circular_buffer);
         }
         if (min == r) {
             for (int i = (r - 1 + window) % window; i != r; i = (i - 1 + window) % window) {
@@ -79,9 +76,9 @@ optional<vector<unsigned int>> winnow(const int window, const int k, FILE *file,
     } */
 
 
-    
-    htable.clear();   //delete me if anything goes wrong
-    delete[] circular_buffer;
+    //delete[] circular_buffer;
+    //circular_buffer.clear();
+    //circular_buffer = nullptr; //delete me too
 
     for (const unsigned int& fingerprint : fingerprints) {
         fprintf(file, "%d ", fingerprint); 

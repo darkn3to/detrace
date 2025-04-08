@@ -86,6 +86,10 @@ enum TOKEN_TYPE {
     OR,
     INCREMENT,
     DECREMENT,
+    MUL_ASSIGN,
+    DIV_ASSIGN,
+    SHIFT_LEFT,
+    SHIFT_RIGHT
 
 };
 
@@ -111,7 +115,7 @@ unordered_map<string, TOKEN_TYPE> operatorMap = {
     {"=", TOKEN_TYPE::ASSIGN}, {"!", TOKEN_TYPE::NOT}, {"<", TOKEN_TYPE::LESS}, {">", TOKEN_TYPE::GREATER}, {"&", TOKEN_TYPE::BIT_AND}, {"|", TOKEN_TYPE::BIT_OR},
     {"==", TOKEN_TYPE::EQUAL}, {"!=", TOKEN_TYPE::NOT_EQUAL}, {"<=", TOKEN_TYPE::LESS_EQUAL}, {">=", TOKEN_TYPE::GREATER_EQUAL}, {"&&", TOKEN_TYPE::AND}, {"||", TOKEN_TYPE::OR},
     {"++", TOKEN_TYPE::INCREMENT}, {"--", TOKEN_TYPE::DECREMENT}, {"+=", TOKEN_TYPE::PLUS_ASSIGN},
-    {"-=", TOKEN_TYPE::MINUS_ASSIGN}
+    {"-=", TOKEN_TYPE::MINUS_ASSIGN}, {"*=", TOKEN_TYPE::MUL_ASSIGN}, {"/=", TOKEN_TYPE::DIV_ASSIGN}, {">>", TOKEN_TYPE::SHIFT_LEFT}, {"<<", TOKEN_TYPE::SHIFT_RIGHT}
 };
 
 
@@ -225,12 +229,14 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case GREATER_EQUAL: return "GREATER_EQUAL";
         case AND:           return "AND";
         case OR:            return "OR";
+        case MUL_ASSIGN:     return "MUL_ASSIGN";
+        case DIV_ASSIGN:     return "DIV_ASSIGN";
+        case SHIFT_LEFT:    return "SHIFT_LEFT";
+        case SHIFT_RIGHT:   return "SHIFT_RIGHT";
 
         default:             return "UNKNOWN";
     }
 }
-
-string buffer;
 
 class Token {
 public:
