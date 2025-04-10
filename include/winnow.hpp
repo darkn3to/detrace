@@ -81,9 +81,10 @@ optional<vector<unsigned int>> winnow(const int window, const int k, FILE * cons
     //circular_buffer = nullptr; //delete me too
 
     for (const unsigned int& fingerprint : fingerprints) {
-        fprintf(file, "%d ", fingerprint); 
+        fwrite(&fingerprint, sizeof(unsigned int), 1, file);
+        //fprintf(file, "%d ", fingerprint); // for text output
     }
-
+    
     if (ret) 
         return fingerprints;
     else 

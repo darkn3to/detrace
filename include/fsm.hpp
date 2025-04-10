@@ -81,6 +81,23 @@ public:
                         tokenBuffer.push_back(c);
                         nextState = tState::Number;
                     }
+                    else if (c == '/' && pos + 1 < this->buffer.size() && this->buffer[pos + 1] == '*') {
+                        pos += 2; // Skip "/*"
+                        // Skip until "*/" is found.
+                        while (pos + 1 < this->buffer.size() && !(this->buffer[pos] == '*' && this->buffer[pos + 1] == '/')) {
+                            pos++;
+                        }
+                        if (pos + 1 < this->buffer.size()) {
+                            pos += 2; // Skip "*/"
+                        }
+                        nextState = tState::NewToken;
+                    }
+                    else if (c == '/' && pos + 1 < this->buffer.size() && this->buffer[pos + 1] == '/') {
+                        // Handle single-line comment
+                        while (++pos < this->buffer.size() && this->buffer[pos] != '\n');
+                        nextState = tState::NewToken; // Ignore the comment
+                    }
+                    
                     else if (operatorMap.find(string(1, c)) != operatorMap.end()) {
                         tokenBuffer.push_back(c);
                         if (pos + 1 < this->buffer.size() && operatorMap.find(tokenBuffer + string(1, this->buffer[pos + 1])) != operatorMap.end()) {

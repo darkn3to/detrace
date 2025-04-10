@@ -2,6 +2,7 @@
 #include "token.hpp"
 #include "fsm.hpp"
 #include "winnow.hpp"
+#include "similarity.hpp"
 #include <vector>
 #include <iostream>
 #include <string>
@@ -11,8 +12,6 @@
 #include <filesystem>
 
 namespace fs = filesystem;
-
-vector<unsigned int> orig_fingerprints;
 
 void process_file(const char *filename, bool originalFile) {
     FILE *file = open_file(filename); 
@@ -63,6 +62,9 @@ int main(int argc, char **argv) {
     auto start = chrono::high_resolution_clock::now();
 
     process_file(argv[1], true); // Process the original file separately
+    for (const unsigned int &fingerprint : orig_fingerprints) {
+        ++orig_fingerprintMap[fingerprint];
+    }
     
     if (string(argv[argc - 1]) == "--m" || string(argv[argc - 1]) == "--M") {
         const unsigned int lprocs = max(1u, thread::hardware_concurrency());
@@ -71,6 +73,7 @@ int main(int argc, char **argv) {
         for (int i = 2; i < argc - 1; ++i) {
             threads.emplace_back([filename = argv[i]]() {
                 process_file(filename, false);
+                
             });
 
             if (threads.size() >= lprocs) {
@@ -88,6 +91,8 @@ int main(int argc, char **argv) {
     else if (string(argv[argc - 1]) != "--m" && string(argv[argc - 1]) != "--M") {
         for (int i = 2; i < argc; ++i) {
             process_file(argv[i], false); 
+            string fpath = "analysis/fingerprints/" + string(argv[i]) + "_fingerprints.txt";
+            jaccard_similarity(fpath, argv[i], argv[1]);
         }
 
     }

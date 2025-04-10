@@ -16,7 +16,7 @@ FILE *open_file(const char *filename) {
     }
     else {
         msg += " opened successfully.";
-        cout << msg << endl;
+        //cout << msg << endl;
     }
     return file;
 }
@@ -25,7 +25,7 @@ void close_file(const char *filename, FILE *file) {
     fclose(file);
     msg = filename; 
     msg += " closed successfully.";
-    cout << msg << endl;
+    //cout << msg << endl;
 }
 
 #endif // FILE_IO_HPP

@@ -25,13 +25,22 @@ FILE* initializeOutputFile(const string& filename, const string &filetype) {
 
         string fullPath = childDir + "/" + filename;
 
-        FILE* file = fopen(fullPath.c_str(), "w");
+        FILE *file;
+
+        // use binary mode for preserving unsigned int after writing
+        if (filetype == "fingerprints") {
+            file = fopen(fullPath.c_str(), "wb");
+        }
+        else { // use text mode for other files
+            file = fopen(fullPath.c_str(), "w");
+        }
+
         if (file == NULL) {
             cerr << "Error: Could not create file: " << fullPath << endl;
             return NULL;
         }
 
-        cout << "File initialized at: " << fullPath << endl;
+        //cout << "File initialized at: " << fullPath << endl;
         return file;
     } 
     catch (const fs::filesystem_error& e) {
