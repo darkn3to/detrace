@@ -93,10 +93,12 @@ inline std::pair<std::string, std::pair<std::string, std::string>> search(std::i
     if (ch >= '0' && ch <= '9') return numeric_literal(fin);
     else if(ch == '"') return string_literal(fin) ;
     else if(ch == char(39)){
-    	str.push_back(fin.get()) ; 	str.push_back(fin.get()) ;  str.push_back(fin.get()) ;
-		return {str,{"CHAR_LITERAL","CHAR_LITERAL"}} ;
-	}
-
+    	ch = fin.get() ;
+    	str.push_back(ch) ; 
+    	ch = fin.peek() ; 
+	while(ch != char(39)) str.push_back((ch = fin.get())) ;
+	return {str,{"CHAR_LITERAL","CHAR_LITERAL"}} ;
+    }
     State* curr = Moore;
     while (ch != EOF && curr->childs[ch]) {
         str.push_back(ch);
