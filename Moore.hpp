@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <array>
-#include <chrono>
 
 inline bool isEscapeSequence(char ch) {
 	int val = ch ;
@@ -159,12 +158,8 @@ inline void insertTokensInMoore() {
     
 struct MooreInitializer {
     MooreInitializer() {
-	    auto start = std::chrono::high_resolution_clock::now();
 	    Moore = new State('\0');
 	    insertTokensInMoore();
-	    auto end = std::chrono::high_resolution_clock::now();
-	    std::chrono::duration<double> elapsed = end - start;
-	    std::cout << "Execution Time: " << elapsed.count() << " seconds" << std::endl;
     }
 };
 
