@@ -101,8 +101,15 @@ public:
                     else if (operatorMap.find(string(1, c)) != operatorMap.end()) {
                         tokenBuffer.push_back(c);
                         if (pos + 1 < this->buffer.size() && operatorMap.find(tokenBuffer + string(1, this->buffer[pos + 1])) != operatorMap.end()) {
-                            ++pos; 
-                            tokenBuffer.push_back(buffer[pos]);
+                            if (pos + 2 < this->buffer.size() && operatorMap.find(tokenBuffer + string(1, this->buffer[pos + 1]) + string(1, this->buffer[pos + 2])) != operatorMap.end()) {
+                                tokenBuffer.push_back(this->buffer[pos + 1]);
+                                tokenBuffer.push_back(this->buffer[pos + 2]);
+                                pos += 2; // Skip the next two characters
+                            } 
+                            else {
+                                ++pos; // Skip the next character
+                                tokenBuffer.push_back(this->buffer[pos]);
+                            }
                             //currToken.set(operatorMap[tokenBuffer]);
                         }
                         currToken.set(tokenBuffer, operatorMap[tokenBuffer]);

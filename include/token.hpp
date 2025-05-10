@@ -77,7 +77,8 @@ enum TOKEN_TYPE {
     LESS,      
     GREATER,    
     BIT_AND,    
-    BIT_OR,     
+    BIT_OR,  
+    BOOL,   
     EQUAL,      
     NOT_EQUAL,  
     LESS_EQUAL, 
@@ -89,7 +90,17 @@ enum TOKEN_TYPE {
     MUL_ASSIGN,
     DIV_ASSIGN,
     SHIFT_LEFT,
-    SHIFT_RIGHT
+    SHIFT_RIGHT,
+    SHIFT_LEFT_ASSIGN,
+    SHIFT_RIGHT_ASSIGN,
+    BIT_XOR_ASSIGN,
+    BIT_AND_ASSIGN,
+    BIT_OR_ASSIGN, 
+    MOD_ASSIGN,
+    ARROW,
+    BIT_NOT,
+    BIT_XOR,
+    QUESTION
 
 };
 
@@ -113,9 +124,13 @@ enum tState {
 unordered_map<string, TOKEN_TYPE> operatorMap = {
     {"+", TOKEN_TYPE::PLUS}, {"-", TOKEN_TYPE::MINUS}, {"*", TOKEN_TYPE::MULTIPLY}, {"/", TOKEN_TYPE::DIVIDE}, {"%", TOKEN_TYPE::MODULO},
     {"=", TOKEN_TYPE::ASSIGN}, {"!", TOKEN_TYPE::NOT}, {"<", TOKEN_TYPE::LESS}, {">", TOKEN_TYPE::GREATER}, {"&", TOKEN_TYPE::BIT_AND}, {"|", TOKEN_TYPE::BIT_OR},
-    {"==", TOKEN_TYPE::EQUAL}, {"!=", TOKEN_TYPE::NOT_EQUAL}, {"<=", TOKEN_TYPE::LESS_EQUAL}, {">=", TOKEN_TYPE::GREATER_EQUAL}, {"&&", TOKEN_TYPE::AND}, {"||", TOKEN_TYPE::OR},
+    {"^", TOKEN_TYPE::BIT_XOR}, {"~", TOKEN_TYPE::BIT_NOT},    {"==", TOKEN_TYPE::EQUAL}, {"!=", TOKEN_TYPE::NOT_EQUAL}, {"<=", TOKEN_TYPE::LESS_EQUAL}, {">=", TOKEN_TYPE::GREATER_EQUAL}, {"&&", TOKEN_TYPE::AND}, {"||", TOKEN_TYPE::OR},
     {"++", TOKEN_TYPE::INCREMENT}, {"--", TOKEN_TYPE::DECREMENT}, {"+=", TOKEN_TYPE::PLUS_ASSIGN},
-    {"-=", TOKEN_TYPE::MINUS_ASSIGN}, {"*=", TOKEN_TYPE::MUL_ASSIGN}, {"/=", TOKEN_TYPE::DIV_ASSIGN}, {">>", TOKEN_TYPE::SHIFT_LEFT}, {"<<", TOKEN_TYPE::SHIFT_RIGHT}
+    {"-=", TOKEN_TYPE::MINUS_ASSIGN}, {"*=", TOKEN_TYPE::MUL_ASSIGN}, {"/=", TOKEN_TYPE::DIV_ASSIGN}, {">>", TOKEN_TYPE::SHIFT_LEFT}, {"<<", TOKEN_TYPE::SHIFT_RIGHT}, {">>=", TOKEN_TYPE::SHIFT_RIGHT_ASSIGN}, {"<<=", TOKEN_TYPE::SHIFT_LEFT_ASSIGN},
+    {"^=", TOKEN_TYPE::BIT_XOR_ASSIGN},
+    {"%=", TOKEN_TYPE::MOD_ASSIGN}, 
+    {"&=", TOKEN_TYPE::BIT_AND_ASSIGN}, {"|=", TOKEN_TYPE::BIT_OR_ASSIGN}, {"->", TOKEN_TYPE::ARROW},
+    {"?", TOKEN_TYPE::QUESTION}
 };
 
 
@@ -138,6 +153,7 @@ unordered_map<string, TOKEN_TYPE> keywordMap = {
     {"if", TOKEN_TYPE::IF},
     {"int", TOKEN_TYPE::INT},
     {"long", TOKEN_TYPE::LONG},
+    {"bool", TOKEN_TYPE::BOOL},
     {"return", TOKEN_TYPE::RETURN},
     {"short", TOKEN_TYPE::SHORT},
     {"signed", TOKEN_TYPE::SIGNED},
@@ -160,8 +176,6 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case NUMBER:         return "NUMBER";
         case STRING:         return "STRING";
         case KEYWORD:        return "KEYWORD";
-        case OPERATOR:       return "OPERATOR";
-        case PUNCTUATOR:     return "PUNCTUATOR";
         case LPAREN:         return "LPAREN";
         case RPAREN:         return "RPAREN";
         case LSQBRACKET:     return "LSQBRACKET";
@@ -195,6 +209,7 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case IF:             return "IF";
         case INT:            return "INT";
         case LONG:           return "LONG";
+        case BOOL:           return "BOOL";
         case RETURN:         return "RETURN";
         case SHORT:          return "SHORT";
         case SIGNED:         return "SIGNED";
@@ -233,6 +248,16 @@ string tokenTypeToString(TOKEN_TYPE type) {
         case DIV_ASSIGN:     return "DIV_ASSIGN";
         case SHIFT_LEFT:    return "SHIFT_LEFT";
         case SHIFT_RIGHT:   return "SHIFT_RIGHT";
+        case SHIFT_LEFT_ASSIGN: return "SHIFT_LEFT_ASSIGN";
+        case SHIFT_RIGHT_ASSIGN: return "SHIFT_RIGHT_ASSIGN";
+        case BIT_XOR_ASSIGN: return "BIT_XOR_ASSIGN";
+        case MOD_ASSIGN:     return "MOD_ASSIGN";
+        case BIT_AND_ASSIGN: return "BIT_AND_ASSIGN";
+        case BIT_OR_ASSIGN:  return "BIT_OR_ASSIGN";
+        case ARROW:         return "ARROW";
+        case BIT_NOT:       return "BIT_NOT";
+        case BIT_XOR:      return "BIT_XOR";
+        case QUESTION:      return "QUESTION";
 
         default:             return "UNKNOWN";
     }
