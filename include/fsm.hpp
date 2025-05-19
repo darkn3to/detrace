@@ -50,9 +50,20 @@ public:
                         nextState = tState::AcceptToken;
                     }
                     else if (c == '\'') {
-                        pos++;
-                        currToken.set(std::string(1, this->buffer[pos]), TOKEN_TYPE::CHAR_LITERAL);
-                        pos++;
+                        tokenBuffer.push_back(c); 
+                        while (++pos < this->buffer.size()) {
+                            c = this->buffer[pos];
+                            tokenBuffer.push_back(c);
+                            if (c == '\\') { 
+                                if (++pos < this->buffer.size()) {
+                                    tokenBuffer.push_back(buffer[pos]);
+                                }
+                            } 
+                            else if (c == '\'') { 
+                                break;
+                            }
+                        }
+                        currToken.set(tokenBuffer, TOKEN_TYPE::CHAR_LITERAL);
                         nextState = tState::AcceptToken;
                     }
                     else if (c == '"') {
