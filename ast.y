@@ -103,7 +103,7 @@ void yyerror(const char *s) {
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
 
-%type <node> translation_unit external_declaration function_definition declaration declaration_list statement block_item type_qualifier_list compound_statement non_empty_block_item_list declaration_specifiers declarator init_declarator_list init_declarator initializer alignment_specifier pointer type_name direct_declarator storage_class_specifier type_specifier type_qualifier function_specifier struct_or_union_specifier enum_specifier specifier_qualifier_list struct_declaration_list struct_declaration struct_declarator_list struct_declarator parameter_type_list parameter_list parameter_declaration abstract_declarator direct_abstract_declarator initializer_list expression_statement iteration_statement conditional_statement expression assignment_expression constant_expression primary_expression postfix_expression argument_expression_list unary_expression cast_expression multiplicative_expression additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression conditional_expression enumeration_constant enumerator_list unary_operator assignment_operator
+%type <node> translation_unit external_declaration function_definition declaration declaration_list statement block_item type_qualifier_list compound_statement non_empty_block_item_list declaration_specifiers declarator init_declarator_list init_declarator initializer alignment_specifier pointer type_name direct_declarator storage_class_specifier type_specifier type_specifier_spec type_qualifier function_specifier struct_or_union_specifier enum_specifier specifier_qualifier_list struct_declaration_list struct_declaration struct_declarator_list struct_declarator parameter_type_list parameter_list parameter_declaration abstract_declarator direct_abstract_declarator initializer_list expression_statement iteration_statement conditional_statement expression assignment_expression constant_expression primary_expression postfix_expression argument_expression_list unary_expression cast_expression multiplicative_expression additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression conditional_expression enumeration_constant enumerator_list unary_operator assignment_operator expression_opt
 
 %type <sval> PREPROCESSOR CONST RESTRICT VOLATILE TYPEDEF EXTERN STATIC AUTO REGISTER VOID CHAR SHORT INT LONG FLOAT DOUBLE SIGNED UNSIGNED BOOL INLINE NORETURN TYPEDEF_NAME IDENTIFIER NUMBER CHAR_LITERAL STRING_LITERAL
 
@@ -206,6 +206,23 @@ type_specifier
     | struct_or_union_specifier { $$ = $1; }
     | enum_specifier { $$ = $1; }
     | TYPEDEF_NAME { $$ = create_leaf_node(AST_TYPE_SPECIFIER, $1); }
+    ;
+
+type_specifier_spec
+    : VOID { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "void"); }
+    | CHAR { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "char"); }
+    | SHORT { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "short"); }
+    | INT { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "int"); }
+    | LONG { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "long"); }
+    | FLOAT { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "float"); }
+    | DOUBLE { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "double"); }
+    | SIGNED { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "signed"); }
+    | UNSIGNED { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "unsigned"); }
+    | BOOL { $$ = create_leaf_node(AST_TYPE_SPECIFIER, "bool"); }
+    | struct_or_union_specifier { $$ = $1; }
+    | enum_specifier { $$ = $1; }
+    | TYPEDEF_NAME { $$ = create_leaf_node(AST_TYPE_SPECIFIER, $1); }
+    | /* */ { $$ = NULL; }
     ;
 
 type_qualifier
@@ -347,6 +364,7 @@ initializer_list
 statement
     : expression_statement { $$ = $1; }
     | RETURN expression SEMICOLON { $$ = create_ast_node(AST_RETURN, 1, $2); }
+    | RETURN SEMICOLON { $$ = create_ast_node(AST_RETURN, 0); }
     | iteration_statement { $$ = $1; }
     | conditional_statement { $$ = $1; }
     | compound_statement { $$ = $1; }
@@ -357,12 +375,17 @@ statement
 iteration_statement
     : DO statement WHILE LPAREN expression RPAREN SEMICOLON { $$ = create_ast_node(AST_ITERATION_STMT, 2, $2, $5); }
     | WHILE LPAREN expression RPAREN statement { $$ = create_ast_node(AST_ITERATION_STMT, 2, $3, $5); }
-    | FOR LPAREN expression_statement expression_statement expression_statement RPAREN statement { $$ = create_ast_node(AST_ITERATION_STMT, 4, $3, $4, $5, $7); }
+    | FOR LPAREN type_specifier_spec expression_statement expression_statement expression_opt RPAREN statement { $$ = create_ast_node(AST_ITERATION_STMT, 4, $4, $5, $6, $8); }
     ;
 
 conditional_statement
     : IF LPAREN expression RPAREN statement %prec LOWER_THAN_ELSE { $$ = create_ast_node(AST_IF, 2, $3, $5); }
     | IF LPAREN expression RPAREN statement ELSE statement { $$ = create_ast_node(AST_IF, 3, $3, $5, $7); }
+    ;
+
+expression_opt 
+    : expression { $$ = $1; }
+    | /* empty */ { $$ = NULL; }
     ;
 
 expression_statement
@@ -551,6 +574,8 @@ struct ASTNode *create_leaf_node(ASTNodeType type, const char *val) {
 int yylex(void) {
     char tok[64];
     if (fscanf(yyin, "%63s", tok) != 1) return 0;
+
+    
     /* Map token text to token codes */
     #define MATCH(t) if (strcmp(tok,#t)==0) return t;
     MATCH(PREPROCESSOR)
@@ -635,6 +660,7 @@ void print_ast(struct ASTNode *node, int depth) {
     }
 }
 int main(int argc, char **argv) {
+    //yydebug = 1;
     if (argc < 2) {
         fprintf(stderr, "Usage: %s tokens.txt\n", argv[0]);
         return 1;
