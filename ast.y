@@ -22,6 +22,7 @@ typedef enum {
     AST_FUNCTION_CALL,
     AST_IDENTIFIER,
     AST_LITERAL,
+    AST_NUMBER,
     AST_RETURN,
     AST_IF,
     AST_ITERATION_STMT,
@@ -256,6 +257,7 @@ pointer
 direct_declarator
     : IDENTIFIER { $$ = create_leaf_node(AST_IDENTIFIER, $1); }
     | LPAREN declarator RPAREN { $$ = $2; }
+    | direct_declarator LSQBRACKET RSQBRACKET { $$ = create_ast_node(AST_ARRAY_ACCESS, 0); }
     | direct_declarator LSQBRACKET assignment_expression RSQBRACKET { $$ = create_ast_node(AST_ARRAY_ACCESS, 2, $1, $3); }
     | direct_declarator LPAREN RPAREN { $$ = create_ast_node(AST_FUNCTION_CALL, 1, $1); }
     | direct_declarator LPAREN argument_expression_list RPAREN { $$ = create_ast_node(AST_FUNCTION_CALL, 2, $1, $3); }
@@ -395,7 +397,7 @@ expression_statement
 
 primary_expression
     : IDENTIFIER { $$ = create_leaf_node(AST_IDENTIFIER, $1); }
-    | NUMBER { $$ = create_leaf_node(AST_LITERAL, $1); }
+    | NUMBER { $$ = create_leaf_node(AST_NUMBER, $1); }
     | CHAR_LITERAL { $$ = create_leaf_node(AST_LITERAL, $1); }
     | STRING_LITERAL { $$ = create_leaf_node(AST_LITERAL, $1); }
     | LPAREN expression RPAREN { $$ = $2; }
@@ -618,6 +620,7 @@ const char *ast_node_type_to_string(ASTNodeType type) {
         case AST_FUNCTION_CALL:           return "FunctionCall";
         case AST_IDENTIFIER:              return "Identifier";
         case AST_LITERAL:                 return "Literal";
+        case AST_NUMBER:                  return "Number";
         case AST_RETURN:                  return "Return";
         case AST_IF:                      return "If";
         case AST_ITERATION_STMT:          return "IterationStmt";
