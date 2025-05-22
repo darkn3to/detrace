@@ -3,7 +3,7 @@ CXXFLAGS = -Iinclude -Wall -std=c++17
 
 TARGET = detrace
 
-SRC = lexer.cpp
+SRC = driver.cpp
 OBJ = $(SRC:.cpp=.o)
 
 .PHONY: all clean

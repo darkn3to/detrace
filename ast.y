@@ -4,67 +4,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <vector>
+#include "include/ast.h"
 
-#define makelist(x) create_ast_node(AST_LIST, 1, x)
-#define makelist_leaf(x) create_leaf_node(AST_LIST, x)
-#define append_list(x1, x2) ((x1 && x2) ? create_ast_node(AST_LIST, 2, x1, x2) : (x1) ? x1 : (struct ASTNode *)NULL)
-
-typedef enum {
-    AST_FUNCTION_DEF,
-    AST_PARAM_LIST,
-    AST_PARAM,
-    AST_DECLARATION,
-    AST_INIT_DECLARATOR,
-    AST_ASSIGNMENT,
-    AST_PREPROCESSOR,
-    AST_PLUS, AST_MINUS, AST_MUL, AST_DIV, AST_MOD,
-    AST_LT, AST_GT, AST_LE, AST_GE,
-    AST_FUNCTION_CALL,
-    AST_IDENTIFIER,
-    AST_LITERAL,
-    AST_NUMBER,
-    AST_RETURN,
-    AST_IF,
-    AST_ITERATION_STMT,
-    AST_COMPOUND_STMT,
-    AST_ARRAY_ACCESS,
-    AST_STRUCT_DECL,
-    AST_TYPEDEF,
-    AST_INIT_LIST,
-    AST_POINTER_DEREF,
-    AST_ADDRESS_OF,
-    AST_BREAK,
-    AST_CONTNUE,
-    AST_SIZEOF,
-    AST_POINTER,
-    AST_TYPE_QUALIFIER,
-    AST_TYPE_SPECIFIER,
-    AST_FUNCTION_SPECIFIER,
-    AST_TRANS,
-    AST_LIST,
-    AST_BLOCK,
-    AST_ALIGNMENT_SPECIFIER,
-    AST_STORAGE_CLASS_SPECIFIER, 
-    AST_DECLARATOR,
-    AST_ENUM,
-    AST_TYPE_NAME, 
-    AST_CONTINUE
-} ASTNodeType;
-
-struct ASTNode {
-    ASTNodeType type;
-    int val;
-    char *value;
-    int child_count;
-    struct ASTNode **children;
-} ASTNode;
+using namespace std;
 
 struct ASTNode *create_ast_node(ASTNodeType type, int n, ...);
 struct ASTNode *create_leaf_node(ASTNodeType type, const char *val);
 void print_ast(struct ASTNode *node, int depth);
 const char *ast_node_type_to_string(ASTNodeType type);
-
-struct ASTNode *root;
+struct ASTNode *remove_all_lists(struct ASTNode *node);
 
 FILE *yyin;
 int yylex(void);
@@ -103,6 +52,7 @@ void yyerror(const char *s) {
 %define parse.error verbose
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
+
 
 %type <node> translation_unit external_declaration function_definition declaration declaration_list statement block_item type_qualifier_list compound_statement non_empty_block_item_list declaration_specifiers declarator init_declarator_list init_declarator initializer alignment_specifier pointer type_name direct_declarator storage_class_specifier type_specifier type_specifier_spec type_qualifier function_specifier struct_or_union_specifier enum_specifier specifier_qualifier_list struct_declaration_list struct_declaration struct_declarator_list struct_declarator parameter_type_list parameter_list parameter_declaration abstract_declarator direct_abstract_declarator initializer_list expression_statement iteration_statement conditional_statement expression assignment_expression constant_expression primary_expression postfix_expression argument_expression_list unary_expression cast_expression multiplicative_expression additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression conditional_expression enumeration_constant enumerator_list unary_operator assignment_operator expression_opt
 
@@ -163,7 +113,7 @@ declaration
     ;
 
 init_declarator_list
-    : init_declarator { $$ = makelist($1); }
+    : init_declarator { $$ = $1; }
     | init_declarator_list COMMA init_declarator { $$ = append_list($1, $3); }
     ;
 
@@ -410,8 +360,8 @@ postfix_expression
     | postfix_expression LPAREN argument_expression_list RPAREN { $$ = create_ast_node(AST_FUNCTION_CALL, 2, $1, $3); }
     | postfix_expression DOT IDENTIFIER { $$ = create_ast_node(AST_STRUCT_DECL, 2, $1, create_leaf_node(AST_IDENTIFIER, $3)); }
     | postfix_expression ARROW IDENTIFIER { $$ = create_ast_node(AST_POINTER_DEREF, 2, $1, create_leaf_node(AST_IDENTIFIER, $3)); }
-    | postfix_expression INCREMENT { $$ = create_ast_node(AST_TRANS, 1, $1); }
-    | postfix_expression DECREMENT { $$ = create_ast_node(AST_TRANS, 1, $1); }
+    | postfix_expression INCREMENT { $$ = create_ast_node(AST_INCREMENT, 1, $1); }
+    | postfix_expression DECREMENT { $$ = create_ast_node(AST_DECREMENT, 1, $1); }
     ;
 
 argument_expression_list
@@ -421,20 +371,20 @@ argument_expression_list
 
 unary_expression
     : postfix_expression { $$ = $1; }
-    | INCREMENT unary_expression { $$ = create_ast_node(AST_TRANS, 1, $2); }
-    | DECREMENT unary_expression { $$ = create_ast_node(AST_TRANS, 1, $2); }
-    | unary_operator cast_expression { $$ = create_ast_node(AST_TRANS, 2, $1, $2); }
+    | INCREMENT unary_expression { $$ = create_ast_node(AST_INCREMENT, 1, $2); }
+    | DECREMENT unary_expression { $$ = create_ast_node(AST_DECREMENT, 1, $2); }
+    | unary_operator cast_expression { $$ = create_ast_node(AST_UNARY_OP, 2, $1, $2); }
     | SIZEOF unary_expression { $$ = create_ast_node(AST_SIZEOF, 1, $2); }
     | SIZEOF LPAREN type_name RPAREN { $$ = create_ast_node(AST_SIZEOF, 1, $3); }
     ;
 
 unary_operator
-    : BIT_AND { $$ = create_leaf_node(AST_TRANS, "&"); }
-    | MULTIPLY { $$ = create_leaf_node(AST_TRANS, "*"); }
-    | PLUS { $$ = create_leaf_node(AST_TRANS, "+"); }
-    | MINUS { $$ = create_leaf_node(AST_TRANS, "-"); }
-    | BIT_NOT { $$ = create_leaf_node(AST_TRANS, "~"); }
-    | NOT { $$ = create_leaf_node(AST_TRANS, "!"); }
+    : BIT_AND { $$ = create_leaf_node(AST_UNARY_OP, "&"); }
+    | MULTIPLY { $$ = create_leaf_node(AST_UNARY_OP, "*"); }
+    | PLUS { $$ = create_leaf_node(AST_UNARY_OP, "+"); }
+    | MINUS { $$ = create_leaf_node(AST_UNARY_OP, "-"); }
+    | BIT_NOT { $$ = create_leaf_node(AST_UNARY_OP, "~"); }
+    | NOT { $$ = create_leaf_node(AST_UNARY_OP, "!"); }
     ;
 
 cast_expression
@@ -457,8 +407,8 @@ additive_expression
 
 shift_expression
     : additive_expression { $$ = $1; }
-    | shift_expression SHIFT_LEFT additive_expression { $$ = create_ast_node(AST_TRANS, 2, $1, $3); }
-    | shift_expression SHIFT_RIGHT additive_expression { $$ = create_ast_node(AST_TRANS, 2, $1, $3); }
+    | shift_expression SHIFT_LEFT additive_expression { $$ = create_ast_node(AST_SHIFT_EXPR, 2, $1, $3); }
+    | shift_expression SHIFT_RIGHT additive_expression { $$ = create_ast_node(AST_SHIFT_EXPR, 2, $1, $3); }
     ;
 
 relational_expression
@@ -477,12 +427,12 @@ equality_expression
 
 and_expression
     : equality_expression { $$ = $1; }
-    | and_expression BIT_AND equality_expression { $$ = create_ast_node(AST_TRANS, 2, $1, $3); }
+    | and_expression BIT_AND equality_expression { $$ = create_ast_node(AST_BIT_AND, 2, $1, $3); }
     ;
 
 exclusive_or_expression
     : and_expression { $$ = $1; }
-    | exclusive_or_expression BIT_XOR and_expression { $$ = create_ast_node(AST_TRANS, 2, $1, $3); }
+    | exclusive_or_expression BIT_XOR and_expression { $$ = create_ast_node(AST_BIT_XOR, 2, $1, $3); }
     ;
 
 inclusive_or_expression
@@ -492,17 +442,17 @@ inclusive_or_expression
 
 logical_and_expression
     : inclusive_or_expression { $$ = $1; }
-    | logical_and_expression AND inclusive_or_expression { $$ = create_ast_node(AST_TRANS, 2, $1, $3); }
+    | logical_and_expression AND inclusive_or_expression { $$ = create_ast_node(AST_AND, 2, $1, $3); }
     ;
 
 logical_or_expression
     : logical_and_expression { $$ = $1; }
-    | logical_or_expression OR logical_and_expression { $$ = create_ast_node(AST_TRANS, 2, $1, $3); }
+    | logical_or_expression OR logical_and_expression { $$ = create_ast_node(AST_OR, 2, $1, $3); }
     ;
 
 conditional_expression
     : logical_or_expression { $$ = $1; }
-    | logical_or_expression QUESTION expression COLON conditional_expression { $$ = create_ast_node(AST_TRANS, 3, $1, $3, $5); }
+    | logical_or_expression QUESTION expression COLON conditional_expression { $$ = create_ast_node(AST_OR, 3, $1, $3, $5); }
     ;
 
 assignment_expression
@@ -511,17 +461,17 @@ assignment_expression
     ;
 
 assignment_operator
-    : ASSIGN { $$ = create_leaf_node(AST_TRANS, "="); }
-    | PLUS_ASSIGN { $$ = create_leaf_node(AST_TRANS, "+="); }
-    | MINUS_ASSIGN { $$ = create_leaf_node(AST_TRANS, "-="); }
-    | MUL_ASSIGN { $$ = create_leaf_node(AST_TRANS, "*="); }
-    | DIV_ASSIGN { $$ = create_leaf_node(AST_TRANS, "/="); }
-    | MOD_ASSIGN { $$ = create_leaf_node(AST_TRANS, "%="); }
-    | SHIFT_LEFT_ASSIGN { $$ = create_leaf_node(AST_TRANS, "<<="); }
-    | SHIFT_RIGHT_ASSIGN { $$ = create_leaf_node(AST_TRANS, ">>="); }
-    | BIT_AND_ASSIGN { $$ = create_leaf_node(AST_TRANS, "&="); }
-    | BIT_XOR_ASSIGN { $$ = create_leaf_node(AST_TRANS, "^="); }
-    | BIT_OR_ASSIGN { $$ = create_leaf_node(AST_TRANS, "|="); }
+    : ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "="); }
+    | PLUS_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "+="); }
+    | MINUS_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "-="); }
+    | MUL_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "*="); }
+    | DIV_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "/="); }
+    | MOD_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "%="); }
+    | SHIFT_LEFT_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "<<="); }
+    | SHIFT_RIGHT_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, ">>="); }
+    | BIT_AND_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "&="); }
+    | BIT_XOR_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "^="); }
+    | BIT_OR_ASSIGN { $$ = create_leaf_node(AST_ASSIGNMENT, "|="); }
     ;
 
 expression
@@ -540,12 +490,12 @@ struct ASTNode *create_ast_node(ASTNodeType type, int n, ...) {
     va_list args;
     va_start(args, n);
 
-    struct ASTNode *ret = malloc(sizeof *ret);
+    struct ASTNode *ret = (struct ASTNode *)malloc(sizeof *ret);
     ret->type        = type;
     ret->val         = 0;        // no integer payload
     ret->value       = NULL;     // no string payload
     ret->child_count = n;
-    ret->children    = malloc(sizeof *ret->children * n);
+    ret->children    = (struct ASTNode **)malloc(sizeof *ret->children * n);
     for (int i = 0; i < n; i++)
         ret->children[i] = va_arg(args, struct ASTNode *);
     
@@ -554,7 +504,7 @@ struct ASTNode *create_ast_node(ASTNodeType type, int n, ...) {
 }
 
 struct ASTNode *create_leaf_node(ASTNodeType type, const char *val) {
-    struct ASTNode *ret = malloc(sizeof *ret);
+    struct ASTNode *ret = (struct ASTNode *)malloc(sizeof *ret);
     ret->type        = type;
     ret->val         = 0;                
     ret->value       = val ? strdup(val) : NULL;
@@ -583,7 +533,7 @@ int yylex(void) {
     MATCH(PREPROCESSOR)
     MATCH(IDENTIFIER) MATCH(NUMBER) MATCH(CHAR_LITERAL) MATCH(STRING_LITERAL)
     MATCH(TYPEDEF_NAME) MATCH(TYPEDEF) MATCH(EXTERN) MATCH(STATIC) MATCH(AUTO) MATCH(REGISTER)
-    MATCH(VOID) MATCH(CHAR) MATCH(SHORT) MATCH(INT) MATCH(LONG) MATCH(FLOAT) MATCH(DOUBLE) MATCH(SIGNED) MATCH(UNSIGNED) MATCH(BOOL)
+    MATCH(VOID) MATCH(CHAR) MATCH(SHORT) MATCH(INT) MATCH(LONG) MATCH(FLOAT) MATCH(DOUBLE) MATCH(SIGNED) MATCH(UNSIGNED) MATCH(BOOL) MATCH(DO)
     MATCH(STRUCT) MATCH(UNION) MATCH(ENUM) MATCH(CONST) MATCH(RESTRICT) MATCH(VOLATILE)
     MATCH(INLINE) MATCH(NORETURN) MATCH(ALIGNAS) MATCH(SIZEOF) MATCH(ELLIPSIS) MATCH(WHILE) MATCH(FOR) MATCH(IF) MATCH(ELSE)
     MATCH(LPAREN) MATCH(RPAREN) MATCH(LSQBRACKET) MATCH(RSQBRACKET) MATCH(LBRACE) MATCH(RBRACE)
@@ -618,9 +568,9 @@ const char *ast_node_type_to_string(ASTNodeType type) {
         case AST_LE:                      return "LessEqual";
         case AST_GE:                      return "GreaterEqual";
         case AST_FUNCTION_CALL:           return "FunctionCall";
-        case AST_IDENTIFIER:              return "Identifier";
+        case AST_IDENTIFIER:              return "ID";
         case AST_LITERAL:                 return "Literal";
-        case AST_NUMBER:                  return "Number";
+        case AST_NUMBER:                  return "NUM";
         case AST_RETURN:                  return "Return";
         case AST_IF:                      return "If";
         case AST_ITERATION_STMT:          return "IterationStmt";
@@ -646,22 +596,258 @@ const char *ast_node_type_to_string(ASTNodeType type) {
         case AST_DECLARATOR:              return "Declarator";
         case AST_ENUM:                    return "EnumSpecifier";
         case AST_TYPE_NAME:               return "TypeName";
-        default:                         return "Unknown";
+        case AST_UNARY_OP:                return "UnaryOp";
+        case AST_BIT_AND:                 return "BitAnd";
+        case AST_BIT_OR:                  return "BitOr";
+        case AST_BIT_XOR:                 return "BitXor";
+        case AST_BIT_NOT:                 return "BitNot";
+        case AST_AND:                     return "And";
+        case AST_OR:                      return "Or";
+        case AST_NOT:                     return "Not";
+        case AST_SHIFT_EXPR:              return "ShiftExpr";
+        case AST_INCREMENT:               return "Increment";
+        case AST_DECREMENT:               return "Decrement";
+
+        default:                          return "Unknown";
     }
 }
 
+vector<struct ASTNode *> splice_func(struct ASTNode *list) {
+    std::vector<struct ASTNode *> ret;
+
+    if (!list || (list->type != AST_FUNCTION_DEF)) {
+        if (list) ret.push_back(list);
+        return ret;
+    }
+
+    struct ASTNode *new_function_def = create_ast_node(AST_FUNCTION_DEF, 0);
+
+    for (int i = 0; i < list->child_count; i++) {
+        struct ASTNode *child = list->children[i];
+
+        if (child->type == AST_FUNCTION_CALL) {
+            int N = child->child_count;
+            for (int j = 0; j < N; j++) {
+                new_function_def->children = (struct ASTNode **)realloc(
+                    new_function_def->children,
+                    sizeof(struct ASTNode *) * (new_function_def->child_count + 1)
+                );
+                new_function_def->children[new_function_def->child_count++] = child->children[j];
+            }
+        } 
+        else {
+            new_function_def->children = (struct ASTNode **)realloc(
+                new_function_def->children,
+                sizeof(struct ASTNode *) * (new_function_def->child_count + 1)
+            );
+            new_function_def->children[new_function_def->child_count++] = child;
+        }
+    }
+
+    ret.push_back(new_function_def);
+    
+    return ret;
+}
+
+vector<struct ASTNode *> splice(struct ASTNode *list) {
+    std::vector<struct ASTNode *> ret;
+
+    if (!list || (list->type != AST_LIST && list->type != AST_FUNCTION_CALL && list->type != AST_DECLARATOR && list->type != AST_TRANS)) {
+        if (list) ret.push_back(list);
+        return ret;
+    }
+
+    int N = list->child_count;
+    if (N == 0) {
+        free(list->children);
+        return ret;
+    }
+
+    for (int i = 0; i < N; i++) {
+        ret.push_back(list->children[i]);
+    }
+    
+    return ret;
+}
+
+vector<struct ASTNode *> flatten_decl(struct ASTNode *node) {
+    vector<struct ASTNode *> ret;
+
+    // Only keep the original if there's no declarator at all
+    if (node->child_count < 2) {
+        ret.push_back(node);
+        return ret;
+    }
+
+    // Otherwise, split EVERY declarator (list or sibling) out:
+    struct ASTNode *type_node = node->children[0];
+    for (int j = 1; j < node->child_count; j++) {
+        struct ASTNode *decl_kid = node->children[j];
+        if (!decl_kid) continue;
+        struct ASTNode *init;
+        if (decl_kid->type == AST_LIST) {
+            for (int i = 0; i < decl_kid->child_count; i++) {
+                init = decl_kid->children[i];
+                // debug print
+                //printf("flatten_decl: list -> %s\n", init->value);
+                ret.push_back(
+                  create_ast_node(AST_DECLARATION, 2, type_node, init)
+                );
+            }
+        } 
+        else {
+            // debug print
+            //printf("flatten_decl: single -> %s\n", decl_kid->value);
+            ret.push_back(
+              create_ast_node(AST_DECLARATION, 2, type_node, decl_kid)
+            );
+        }
+    }
+
+    return ret;
+}
+
+inline char check_helper(struct ASTNode *node) {
+    if (node->type == AST_COMPOUND_STMT) {
+        return (node->child_count == 0) ? 'n' : 'y';
+    }
+    return 'n';
+}
+
+char check(struct ASTNode *node) {
+    short n = node->child_count, i = 0;
+    for (; i < n; i++) {
+        return check_helper(node->children[i]);
+    } 
+    return 'n';
+}
+
+struct ASTNode *flatten_ast(struct ASTNode *node) {
+    if (!node) return NULL;
+
+    for (int i = 0; i < node->child_count; i++) {
+        node->children[i] = flatten_ast(node->children[i]);
+    }
+
+    std::vector<struct ASTNode*> newKids;
+    for (int i = 0; i < node->child_count; i++) {
+        struct ASTNode *kid = node->children[i];
+        if (!kid) continue;
+
+        if (kid->type == AST_LIST) {
+            for (int j = 0; j < kid->child_count; j++)
+                newKids.push_back(kid->children[j]);
+        }
+        else if (kid->type == AST_DECLARATION) {
+            auto decls = flatten_decl(kid);
+            for (auto *d : decls) newKids.push_back(d);
+        }
+        else if (kid->type == AST_DECLARATOR || kid->type == AST_TRANS) {
+            auto sp = splice(kid);
+            for (auto *d : sp) newKids.push_back(d);
+        }
+        else if (kid->type == AST_FUNCTION_DEF) {
+            auto spf = splice_func(kid);
+            for (auto *d : spf) newKids.push_back(d);
+        }
+        else {
+            newKids.push_back(kid);
+        }
+    }
+
+    if (node->type == AST_COMPOUND_STMT && newKids.empty()) {
+        free(node->children);
+        free(node);
+        return NULL;
+    }
+
+    if (node->type == AST_ITERATION_STMT) {
+    bool has_non_empty_body = false;
+    for (int i = 0; i < node->child_count; i++) {
+        if (node->children[i] && node->children[i]->type == AST_COMPOUND_STMT && node->children[i]->child_count > 0) {
+            has_non_empty_body = true;
+            break;
+        }
+    }
+    if (!has_non_empty_body) {
+        free(node->children);
+        free(node);
+        return NULL;
+    }
+}
+
+    struct ASTNode **arr = (struct ASTNode **)malloc(sizeof(*arr) * newKids.size());
+    for (size_t i = 0; i < newKids.size(); i++) {
+        arr[i] = newKids[i];
+    }
+    free(node->children);
+    node->children    = arr;
+    node->child_count = (int)newKids.size();
+    return node;
+}
+
+
 void print_ast(struct ASTNode *node, int depth) {
     if (!node) return;
-    for(int i = 0; i < depth; i++) putchar(' ');
-    printf("%s", ast_node_type_to_string(node->type));
+    // Skip pure list nodes (they’re just containers)
+    //if (node->type == AST_LIST) return;
+
+    // Print indentation + type + optional "(value)"
+    printf("%*s%s", depth, "", ast_node_type_to_string(node->type));
     if (node->value) {
         printf("(%s)", node->value);
     }
-    putchar('\n');
-    for(int i = 0; i < node->child_count; i++) {
+    printf("\n");
+
+    // Recurse into any real children
+    for (int i = 0; i < node->child_count; i++) {
         print_ast(node->children[i], depth + 2);
     }
 }
+
+void export_ast_to_json(struct ASTNode *node, FILE *out) {
+    if (!node) return;
+
+    // Start the JSON object for this node
+    fprintf(out, "{\n");
+    fprintf(out, "  \"type\": \"%s\",\n", ast_node_type_to_string(node->type));
+
+    // Add the value if it exists
+    if (node->value) {
+        fprintf(out, "  \"value\": \"%s\",\n", node->value);
+    }
+
+    // Add the children
+    fprintf(out, "  \"children\": [\n");
+    for (int i = 0; i < node->child_count; i++) {
+        export_ast_to_json(node->children[i], out);
+        if (i < node->child_count - 1) {
+            fprintf(out, ",\n");
+        }
+    }
+    fprintf(out, "\n  ]\n");
+
+    // Close the JSON object
+    fprintf(out, "}");
+}
+
+// Function to generate the JSON file
+void generate_json_file(struct ASTNode *root, const char *filename) {
+    FILE *out = fopen(filename, "w");
+    if (!out) {
+        perror("Failed to open file");
+        return;
+    }
+
+    // Start the JSON array
+    fprintf(out, "[\n");
+    //export_ast_to_json(root, out);
+    fprintf(out, "\n]\n");
+
+    fclose(out);
+}
+
+
 int main(int argc, char **argv) {
     //yydebug = 1;
     if (argc < 2) {
@@ -676,9 +862,13 @@ int main(int argc, char **argv) {
         printf("tok[%d] = %d\n", i, tok);*/
     rewind(yyin);
     if (yyparse() == 0) {
+        root = flatten_ast(root);
+        generate_json_file(root, "ast.json");
         print_ast(root, 0);
+
         return 0;
-    } else {
+    } 
+    else {
         fprintf(stderr, "Parse error\n");
         return 1;
     }
