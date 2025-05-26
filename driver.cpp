@@ -3,6 +3,7 @@
 #include "fsm.hpp"
 #include "winnow.hpp"
 #include "similarity.hpp"
+#include "ast.hpp"
 #include <vector>
 #include <iostream>
 #include <string>
@@ -13,13 +14,15 @@
 
 namespace fs = filesystem;
 
+extern ASTNode *root;
+
 void process_file(const char *filename, bool originalFile) {
     FILE *file = open_file(filename); 
     if (file != NULL) {
 
         string fname_str(filename);
         FILE *logTokens = initializeOutputFile((fname_str + "_output.txt").c_str(), "tokens");
-        FILE *logFingerprints = initializeOutputFile((fname_str + "_fingerprints.txt").c_str(), "fingerprints");
+        //FILE *logFingerprints = initializeOutputFile((fname_str + "_fingerprints.txt").c_str(), "fingerprints");
 
         FSM mach;
         vector<Token> tokens = mach.fsm(file);
@@ -30,22 +33,38 @@ void process_file(const char *filename, bool originalFile) {
         fseek(logTokens, 0, SEEK_SET);
         
         
-        if (originalFile) {
+        /*if (originalFile) {
             auto result = winnow(5, 3, logFingerprints, mach.iToken, mach.iToken.size(), true);
             if (result)
             orig_fingerprints = *result;
         }
         else 
             winnow(5, 3, logFingerprints, mach.iToken, mach.iToken.size(), false);
-
+        */
         mach.iToken.clear();
         close_file(filename, file);
         fclose(logTokens);
-        fclose(logFingerprints);
+        //fclose(logFingerprints);
     } 
     else {
         cerr << "Failed to open file: " << filename << endl;
     }
+}
+
+void ast_gen(const string path, const char *filename, const string orig, const char *benchmark) {
+    //cout << "Generating AST for file: " << filename << endl;
+    //string command = "./parser " + path + string(filename) + "_output.txt";
+    string command = "./parser " + string(filename) + " " + orig + " " + string(benchmark);
+    FILE *fp = popen(command.c_str(), "r");
+    if (fp == NULL) {
+        cerr << "Failed to run command: " << command << endl;
+        return;
+    }
+    char buffer[128];
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        cout << buffer;
+    }
+    pclose(fp);
 }
 
 int main(int argc, char **argv) {
@@ -70,6 +89,23 @@ int main(int argc, char **argv) {
     }
 
      ------------------------------------------------------------------------------------------------------------------------- */
+
+    string command = "bison -d ast.y";
+    int gp = system(command.c_str());
+    if (gp == -1) {
+        cerr << "Failed to run command: " << command << endl;
+        return 1;
+    }
+    command = "g++ ast.tab.c ast.cpp -o parser";
+    gp = system(command.c_str());
+    if (gp == -1) {
+        cerr << "Failed to run command: " << command << endl;
+        return 1;
+    }
+    process_file(argv[1], true); 
+    ast_gen("analysis/tokens/", argv[1], "y", argv[1]);
+    //read_orig_astMap_from_file();
+    fs::create_directories("analysis/trees");   
     
     if (string(argv[argc - 1]) == "--m" || string(argv[argc - 1]) == "--M") {
         const unsigned int lprocs = max(1u, thread::hardware_concurrency());
@@ -85,9 +121,8 @@ int main(int argc, char **argv) {
                 /* -------------------------------------------------------------------------------------------------------------------------
                 jaccard_similarity(fpath, filename, originalFile);
                     ---------------------------------------------------------------------------------------------------------------------- */
-
-
-
+                process_file(filename, false);
+                ast_gen("analysis/tokens/", filename, "n", originalFile);
             });
 
             if (threads.size() >= lprocs) {
@@ -112,12 +147,12 @@ int main(int argc, char **argv) {
             /* -------------------------------------------------------------------------------------------------------------------------
             jaccard_similarity(fpath, argv[i], argv[1]);
                 ----------------------------------------------------------------------------------------------------------------------- */
-
-                
+            process_file(argv[i], false);
+            ast_gen("analysis/tokens/", argv[i], "n", argv[1]);
         }
 
     }
-    else {
+    else { 
         cerr << "Invalid option: " << argv[argc - 1] << endl;
         cerr << "Usage: " << argv[0] << " <original_file> <input_file> --m" << endl;
         return 1;

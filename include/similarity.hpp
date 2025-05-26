@@ -1,6 +1,9 @@
 #ifndef SIMILARITY_HPP
 #define SIMILARITY_HPP
 
+#include <mutex>
+std::mutex cout_mutex;
+
 #define RESET   "\033[0m"
 #define RED     "\033[1;31m"
 #define GREEN   "\033[1;32m"
@@ -42,6 +45,8 @@ void jaccard_similarity(const string &filename, const string &inp_file, const st
     FILE *fi = fopen(filename.c_str(), "rb");
     int iRes = intersection(filename, fi);
     int uRes = _union(fi, iRes);
+    {
+    std::lock_guard<std::mutex> lock(cout_mutex);
     cout << "--------------------------" << endl;
     cout << "Similarity Report for File: " << inp_file << endl;
     cout << "Comparing against: " << benchmark << endl;
@@ -57,6 +62,7 @@ void jaccard_similarity(const string &filename, const string &inp_file, const st
         cout << GREEN << sim << "%" << RESET << endl;
 
     cout << "--------------------------" << endl;
+    }
     fclose(fi);
 }
     

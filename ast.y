@@ -4,16 +4,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <vector>
-#include "include/ast.h"
+#include <fstream>
+#include <iostream>
+#include "include/ast.hpp"
 
-using namespace std;
-
-struct ASTNode *create_ast_node(ASTNodeType type, int n, ...);
-struct ASTNode *create_leaf_node(ASTNodeType type, const char *val);
-void print_ast(struct ASTNode *node, int depth);
-const char *ast_node_type_to_string(ASTNodeType type);
-struct ASTNode *remove_all_lists(struct ASTNode *node);
+extern ASTNode* root;
 
 FILE *yyin;
 int yylex(void);
@@ -21,12 +16,12 @@ void yyerror(const char *s) {
     fprintf(stderr, "Error: %s\n", s);
     exit(1);
 }
+
 %}
 
 %union {
     struct ASTNode *node;
     int val;
-    struct ASTNodeList *list;
     char *sval;
 }
 
@@ -492,8 +487,9 @@ struct ASTNode *create_ast_node(ASTNodeType type, int n, ...) {
 
     struct ASTNode *ret = (struct ASTNode *)malloc(sizeof *ret);
     ret->type        = type;
-    ret->val         = 0;        // no integer payload
-    ret->value       = NULL;     // no string payload
+    ret->subtree_n_count   = 0;
+    ret->chs         = 0;       
+    ret->value       = NULL;    
     ret->child_count = n;
     ret->children    = (struct ASTNode **)malloc(sizeof *ret->children * n);
     for (int i = 0; i < n; i++)
@@ -506,7 +502,8 @@ struct ASTNode *create_ast_node(ASTNodeType type, int n, ...) {
 struct ASTNode *create_leaf_node(ASTNodeType type, const char *val) {
     struct ASTNode *ret = (struct ASTNode *)malloc(sizeof *ret);
     ret->type        = type;
-    ret->val         = 0;                
+    ret->subtree_n_count         = 0;     
+    ret->chs         = 0;           
     ret->value       = val ? strdup(val) : NULL;
     ret->child_count = 0;               
     ret->children    = NULL;            
@@ -613,7 +610,7 @@ const char *ast_node_type_to_string(ASTNodeType type) {
 }
 
 vector<struct ASTNode *> splice_func(struct ASTNode *list) {
-    std::vector<struct ASTNode *> ret;
+    vector<struct ASTNode *> ret;
 
     if (!list || (list->type != AST_FUNCTION_DEF)) {
         if (list) ret.push_back(list);
@@ -650,7 +647,7 @@ vector<struct ASTNode *> splice_func(struct ASTNode *list) {
 }
 
 vector<struct ASTNode *> splice(struct ASTNode *list) {
-    std::vector<struct ASTNode *> ret;
+    vector<struct ASTNode *> ret;
 
     if (!list || (list->type != AST_LIST && list->type != AST_FUNCTION_CALL && list->type != AST_DECLARATOR && list->type != AST_TRANS)) {
         if (list) ret.push_back(list);
@@ -729,7 +726,7 @@ struct ASTNode *flatten_ast(struct ASTNode *node) {
         node->children[i] = flatten_ast(node->children[i]);
     }
 
-    std::vector<struct ASTNode*> newKids;
+    vector<struct ASTNode*> newKids;
     for (int i = 0; i < node->child_count; i++) {
         struct ASTNode *kid = node->children[i];
         if (!kid) continue;
@@ -847,6 +844,84 @@ void generate_json_file(struct ASTNode *root, const char *filename) {
     fclose(out);
 }
 
+/*void serialize_ast_node(ofstream &out, const ASTNode *node) {
+    
+    if (!node) {
+        int null_marker = -1;
+        out.write(reinterpret_cast<const char *>(&null_marker), sizeof(null_marker));
+        return;
+    }
+    //cout << "Serializing node of type: " << ast_node_type_to_string(node->type) << endl;
+    out.write(reinterpret_cast<const char *>(&node->type), sizeof(node->type));
+
+    if (node->value) {
+        int value_length = strlen(node->value);
+        out.write(reinterpret_cast<const char *>(&value_length), sizeof(value_length));
+        out.write(node->value, value_length);
+    } 
+    else {
+        int value_length = 0;
+        out.write(reinterpret_cast<const char *>(&value_length), sizeof(value_length));
+    }
+
+    out.write(reinterpret_cast<const char *>(&node->child_count), sizeof(node->child_count));
+
+    for (int i = 0; i < node->child_count; ++i) {
+        serialize_ast_node(out, node->children[i]);
+    }
+}
+
+void write_ast(const ASTNode *root, const string &filename) {
+    ofstream out(filename, ios::binary);
+    if (!out) {
+        cerr<< "Failed to open file for writing: " << filename << endl;
+        return;
+    }
+
+    serialize_ast_node(out, root);
+    out.close();
+}*/
+
+void write_orig_astMap_to_file() {
+    ofstream out("analysis/trees/orig.bin", ios::binary);
+
+    size_t map_size = orig_astMap.size();
+    out.write(reinterpret_cast<const char *>(&map_size), sizeof(map_size));
+
+    for (const auto &[size, hashes] : orig_astMap) {
+        out.write(reinterpret_cast<const char *>(&size), sizeof(size));
+        size_t vector_size = hashes.size();
+        out.write(reinterpret_cast<const char *>(&vector_size), sizeof(vector_size));
+
+        out.write(reinterpret_cast<const char *>(hashes.data()), vector_size * sizeof(unsigned int));
+    }
+
+    out.close();
+}
+
+unordered_map<unsigned int, std::vector<unsigned int>> orig_astMap2;
+
+void read_orig_astMap_from_file() {
+    std::ifstream in("analysis/trees/orig.bin", std::ios::binary);
+
+    size_t map_size;
+    in.read(reinterpret_cast<char *>(&map_size), sizeof(map_size));
+
+    for (size_t i = 0; i < map_size; ++i) {
+        unsigned int size;
+        in.read(reinterpret_cast<char *>(&size), sizeof(size));
+
+        size_t vector_size;
+        in.read(reinterpret_cast<char *>(&vector_size), sizeof(vector_size));
+
+        std::vector<unsigned int> hashes(vector_size);
+        in.read(reinterpret_cast<char *>(hashes.data()), vector_size * sizeof(unsigned int));
+
+        orig_astMap[size] = std::move(hashes);
+    }
+
+    in.close();
+}
 
 int main(int argc, char **argv) {
     //yydebug = 1;
@@ -854,7 +929,8 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Usage: %s tokens.txt\n", argv[0]);
         return 1;
     }
-    yyin = fopen(argv[1], "r");
+    string input_file = "analysis/tokens/" + string(argv[1]) + "_output.txt";
+    yyin = fopen(input_file.c_str(), "r");
     int tok, i;
     rewind(yyin);
     /* you’d need your own tokname() here or just print tok */
@@ -863,9 +939,27 @@ int main(int argc, char **argv) {
     rewind(yyin);
     if (yyparse() == 0) {
         root = flatten_ast(root);
-        generate_json_file(root, "ast.json");
-        print_ast(root, 0);
-
+        char flag = argv[2][0];
+        /*string output = "analysis/trees/" + string(argv[1]) + ".bin";
+        write_ast(root, output);*/
+        AST ast;
+        //ifstream in("analysis/trees/" + string(argv[1]) + ".bin", ios::binary);
+        ast.ast_chs(root, flag);
+        if (flag == 'y') { 
+            write_orig_astMap_to_file();
+            ast.count_subtrees();
+        }
+        else {
+            read_orig_astMap_from_file();
+            cout << "--------------------------" << endl;
+            cout << "Similarity Report for File: " << argv[1] << endl;
+            cout << "Comparing against: " << argv[3] << endl;
+            ast.calculate_similarity();
+        }
+        //ast.printMaps(flag);
+        //generate_json_file(root, "ast.json");
+        //print_ast(root, 0);
+        
         return 0;
     } 
     else {
