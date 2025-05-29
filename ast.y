@@ -724,7 +724,22 @@ struct ASTNode *flatten_ast(struct ASTNode *node) {
 
     for (int i = 0; i < node->child_count; i++) {
         node->children[i] = flatten_ast(node->children[i]);
+        /*if (node->children[i] && node->children[i]->type == AST_FUNCTION_DEF) {
+            func_def_buffer[node->children[i]->child_count] = node->children[i];
+            func_def_idx.insert(i);
+        }*/
     }
+
+    /*if (func_def_buffer.size() > 1 && func_def_buffer.size() <= node->child_count) {
+        auto it = func_def_buffer.begin();
+        for (int idx : func_def_idx) {
+            node->children[idx] = it->second;
+            it++;
+        }
+    } 
+
+    func_def_buffer.clear();
+    func_def_idx.clear();*/
 
     vector<struct ASTNode*> newKids;
     for (int i = 0; i < node->child_count; i++) {

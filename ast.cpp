@@ -1,5 +1,7 @@
 #include "include/ast.hpp"
 #include <iostream>
+#include <map>
+#include <set>
 #include <algorithm>
 #include <utility>
 
@@ -63,41 +65,55 @@ pair<unsigned int, unsigned int> AST::ast_chs(ASTNode *node, char orig) {
         unsigned int leaf_hash = static_cast<unsigned int>(node->type);
         node->chs              = leaf_hash;
         node->subtree_n_count  = 1;
-
-        /*if (orig == 'y') {
-            auto &hashes = orig_astMap[1];
-            hashes.insert(lower_bound(hashes.begin(), hashes.end(), leaf_hash), leaf_hash);
-            //orig_total_subtrees++;
-        } 
-        else {
-            auto &hashes = aux_astMap[1];
-            hashes.insert(lower_bound(hashes.begin(), hashes.end(), leaf_hash), leaf_hash);
-        }*/
-
         return {leaf_hash, 1};
     }
 
-    unsigned int chs = static_cast<unsigned int>(node->type);
-    unsigned int n   = 1;
+    unsigned int chs;
+    unsigned int n;
+
+    std::multimap<unsigned int, ASTNode*> func_def_buffer;
+    std::vector<unsigned int> func_def_idx;
 
     for (int i = 0; i < node->child_count; ++i) {
-        auto [child_hash, child_count] = ast_chs(node->children[i], orig);
-        chs  = chs * 31 + child_hash;
-        n   += child_count;
+        ast_chs(node->children[i], orig);
+
+        if (node->children[i]->type == AST_FUNCTION_DEF) {
+            func_def_buffer.emplace(node->children[i]->subtree_n_count, node->children[i]);
+            func_def_idx.push_back(i);
+        }
+    }
+
+    if (func_def_buffer.size() > 1) {
+        auto it = func_def_buffer.begin();
+        for (unsigned idx : func_def_idx) {
+            node->children[idx] = it->second;
+            ++it;
+        }
+    }
+
+    func_def_buffer.clear();
+    func_def_idx.clear();
+
+    chs = static_cast<unsigned int>(node->type);
+    n   = 1;
+    for (int i = 0; i < node->child_count; ++i) {
+        ASTNode* c = node->children[i];
+        chs = chs * 31 + c->chs;
+        n  += c->subtree_n_count;
     }
 
     node->chs             = chs;
     node->subtree_n_count = n;
-    if (n >= 3) {
-    if (orig == 'y') {
-        auto &hashes = orig_astMap[n];
-        hashes.insert(lower_bound(hashes.begin(), hashes.end(), chs), chs);
-    } 
-    else {
-        auto &hashes = aux_astMap[n];
-        hashes.insert(lower_bound(hashes.begin(), hashes.end(), chs), chs);
+
+    if (n >= 4) {
+        if (orig == 'y') {
+            auto& hashes = orig_astMap[n];
+            hashes.insert(std::lower_bound(hashes.begin(), hashes.end(), chs), chs);
+        } else {
+            auto& hashes = aux_astMap[n];
+            hashes.insert(std::lower_bound(hashes.begin(), hashes.end(), chs), chs);
+        }
     }
-}
 
     return {chs, n};
 }
