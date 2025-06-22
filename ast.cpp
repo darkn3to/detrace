@@ -20,10 +20,25 @@ void AST::count_subtrees() {
     out << orig_total_subtrees;
 }
 
+inline double calculate_bucket_score(const vector<unsigned int>& hashes, int size) {
+    return size * hashes.size();
+}
+
 void AST::calculate_similarity() {
+    double weighted_matching_score = 0.0;
+    double total_score = 0.0;
+
     int sus_total_subtrees = 0;
-    int matching_subtrees = 0;
-    
+
+    // Determine which map to use for total score calculation
+    const auto& smaller_map = (orig_astMap.size() <= aux_astMap.size()) ? orig_astMap : aux_astMap;
+
+    // Calculate total score (denominator) using the smaller map
+    for (const auto &[size, hashes] : smaller_map) {
+        total_score += calculate_bucket_score(hashes, size);
+    }
+
+    // Calculate weighted matching score (numerator)
     for (const auto &[size, hashes] : aux_astMap) {
         sus_total_subtrees += hashes.size();
 
@@ -38,7 +53,8 @@ void AST::calculate_similarity() {
                 back_inserter(intersection)
             );
 
-            matching_subtrees += intersection.size();
+            // Add weighted score for the matching subtrees
+            weighted_matching_score += calculate_bucket_score(intersection, size);
         }
     }
 
@@ -46,10 +62,12 @@ void AST::calculate_similarity() {
     in >> orig_total_subtrees;
     cout << "Total original subtrees: " << orig_total_subtrees << "\n";
     cout << "Total suspect subtrees: " << sus_total_subtrees << "\n";
-    cout << "Matching subtrees: " << matching_subtrees << "\n";
 
-    double similarity = (sus_total_subtrees > 0) 
-                        ? (static_cast<double>(matching_subtrees) / min(orig_total_subtrees, sus_total_subtrees)) * 100.0 
+    cout << "Weighted Matching Score: " << weighted_matching_score << "\n";
+    cout << "Total Score: " << total_score << "\n";
+
+    double similarity = (total_score > 0) 
+                        ? (weighted_matching_score / total_score) * 100.0 
                         : 0.0;
 
     cout << "Similarity: " << similarity << "%\n";
